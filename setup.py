@@ -9,7 +9,7 @@ setup(
     author_email="danmizrahithemiz@gmail.com",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    install_requires=['networkx', 'typing', 'frozendict'],
+    install_requires=['networkx', 'typing', 'frozendict', 'matplotlib', 'EoN', 'plotly'],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     test_suite='tests',
