@@ -27,9 +27,9 @@ class Label(IntEnum):
         W1 = 4
 
     class F_rho(IntEnum):
-        R0 = 6
-        R1 = 7
-        R2 = 8
+        R0 = 5
+        R1 = 6
+        R2 = 7
 
     @property
     def in_sigma(self) -> bool:
@@ -44,4 +44,26 @@ class Label(IntEnum):
         return 4 < self
 
     def same_class(self, other) -> bool:
-        return self // 3 == other // 3
+        return ((self.in_sigma and other.in_sigma) or
+                (self.in_omega and other.in_omega) or
+                (self.in_rho and other.in_rho))
+
+F = {
+    Label.F_sigma.SI,
+    Label.F_sigma.S0,
+    Label.F_sigma.S1,
+    Label.F_omega.W0,
+    Label.F_omega.W1,
+    Label.F_rho.R0,
+    Label.F_rho.R1,
+    Label.F_rho.R2
+}
+
+trans_dict = {"SI":Label.F_sigma.SI,
+              "S0":Label.F_sigma.S0,
+              "S1":Label.F_sigma.S1,
+              "W0":Label.F_omega.W0,
+              "W1":Label.F_omega.W1,
+              "R0":Label.F_rho.R0,
+              "R1":Label.F_rho.R1,
+              "R2":Label.F_rho.R2}

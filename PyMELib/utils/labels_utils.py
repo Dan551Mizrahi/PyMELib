@@ -35,9 +35,9 @@ def join_labels(l0: Label, l1: Label) -> Tuple[bool, Label]:
             else:
                 label_original_vertex = Label.F_omega.W0
         elif l0.in_rho:
-            if sum_of_labels == 12:
+            if sum_of_labels == 10:
                 label_original_vertex = Label.F_rho.R0
-            elif sum_of_labels == 13:
+            elif sum_of_labels == 11:
                 label_original_vertex = Label.F_rho.R1
             else:
                 label_original_vertex = Label.F_rho.R2

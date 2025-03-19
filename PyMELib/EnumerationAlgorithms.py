@@ -1,15 +1,8 @@
-from typing import Dict
+from labels import *
+from PyMELib.utils.labels_utils import *
 
-trans_dict = {"SI":SI,
-              "S0":S0,
-              "S1":S1,
-              "W0":W0,
-              "W1":W1,
-              "R0":R0,
-              "R1":R1,
-              "R2":R2}
 
-def EnumMDS(self, theta: Dict[str, int], i=0, debug_flag=False) -> None:
+def EnumMDS(self, theta: Dict[str, Label], i=0, debug_flag=False) -> None:
     """
     This algorithm means to enumerate all the minimal dominating sets of the graph.
     :param theta: An extendable labeling.
@@ -40,52 +33,52 @@ def EnumMDS(self, theta: Dict[str, int], i=0, debug_flag=False) -> None:
             original_c = theta[original_copy]
             first_copy = self.Q[i][0] + self.nodes[self.first_appear[self.Q[i]]]["br"] + "0"
             first_c = theta[first_copy]
-            if in_rho(original_c):
-                if in_rho(c) and in_rho(first_c) and original_c - R0 == c - R0 + first_c - R0:
-                    if first_c == R1 and c == R1:
+            if original_c.in_rho:
+                if c.in_rho and first_c.in_rho and original_c - Label.F_rho.R0 == c - Label.F_rho.R0 + first_c - Label.F_rho.R0:
+                    if first_c == Label.F_rho.R1 and c == Label.F_rho.R1:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif first_c == R0 and c == R0:
+                    elif first_c == Label.F_rho.R0 and c == Label.F_rho.R0:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif first_c == R0 and c == R1:
+                    elif first_c == Label.F_rho.R0 and c == Label.F_rho.R1:
                         new_theta = self.IncrementLabeling2(theta, i, c)
                     else:
                         if debug_flag:
                             print("Not Valid Labeling")
                             print("-" * 20)
                         continue
-                elif original_c == R1 and first_c == R1 and c == W0:
+                elif original_c == Label.F_rho.R1 and first_c == Label.F_rho.R1 and c == Label.F_omega.W0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == R2 and first_c == W0 and c == R2:
+                elif original_c == Label.F_rho.R2 and first_c == Label.F_omega.W0 and c == Label.F_rho.R2:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == R2 and first_c == R2 and c == W0:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                else:
-                    if debug_flag:
-                        print("Not Valid Labeling")
-                        print("-" * 20)
-                    continue
-            elif in_sigma(original_c) and in_sigma(first_c) and in_sigma(c):
-                if original_c == SI and first_c == SI and c == SI:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S0 and first_c == S0 and c == S0:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S1 and first_c == S1 and c == S0:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S1 and first_c == S0 and c == S1:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S1 and first_c == S1 and c == S1:
+                elif original_c == Label.F_rho.R2 and first_c == Label.F_rho.R2 and c == Label.F_omega.W0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
                 else:
                     if debug_flag:
                         print("Not Valid Labeling")
                         print("-" * 20)
                     continue
-            elif in_omega(original_c) and in_omega(first_c) and in_omega(c):
-                if original_c == W0 and first_c == W0 and c == W0:
+            elif original_c.in_sigma and first_c.in_sigma and c.in_sigma:
+                if original_c == Label.F_sigma.SI and first_c == Label.F_sigma.SI and c == Label.F_sigma.SI:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == W1 and first_c == W0 and c == W1:
+                elif original_c == Label.F_sigma.S0 and first_c == Label.F_sigma.S0 and c == Label.F_sigma.S0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == W1 and first_c == W1 and c == W0:
+                elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S1 and c == Label.F_sigma.S0:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_sigma.S1 and first_c ==Label.F_sigma.S0 and c == Label.F_sigma.S1:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S1 and c == Label.F_sigma.S1:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                else:
+                    if debug_flag:
+                        print("Not Valid Labeling")
+                        print("-" * 20)
+                    continue
+            elif original_c.in_omega and first_c.in_omega and c.in_omega:
+                if original_c == Label.F_omega.W0 and first_c == Label.F_omega.W0 and c == Label.F_omega.W0:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_omega.W1 and first_c == Label.F_omega.W0 and c == Label.F_omega.W1:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_omega.W1 and first_c == Label.F_omega.W1 and c == Label.F_omega.W0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
                 else:
                     if debug_flag:
@@ -114,7 +107,7 @@ def EnumMDS(self, theta: Dict[str, int], i=0, debug_flag=False) -> None:
                 yield from self.EnumMDS(option, i + 1, debug_flag=debug_flag)
 
 
-def EnumMHS(self, theta: Dict[str, int], i=0, debug_flag=False) -> None:
+def EnumMHS(self, theta: Dict[str, Label], i=0, debug_flag=False) -> None:
     """
     This algorithm means to enumerate all the minimal hitting sets of a hypergraph (gets it reduction).
     :param theta: An extendable labeling.
@@ -146,52 +139,52 @@ def EnumMHS(self, theta: Dict[str, int], i=0, debug_flag=False) -> None:
             original_c = theta[original_copy]
             first_copy = self.Q[i][0] + self.nodes[self.first_appear[self.Q[i]]]["br"] + "0"
             first_c = theta[first_copy]
-            if in_rho(original_c):
-                if in_rho(c) and in_rho(first_c) and original_c - R0 == c - R0 + first_c - R0:
-                    if first_c == R1 and c == R1:
+            if original_c.in_rho:
+                if c.in_rho and first_c.in_rho and original_c - Label.F_rho.R0 == c - Label.F_rho.R0 + first_c - Label.F_rho.R0:
+                    if first_c == Label.F_rho.R1 and c == Label.F_rho.R1:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif first_c == R0 and c == R0:
+                    elif first_c == Label.F_rho.R0 and c == Label.F_rho.R0:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif first_c == R0 and c == R1:
+                    elif first_c == Label.F_rho.R0 and c == Label.F_rho.R1:
                         new_theta = self.IncrementLabeling2(theta, i, c)
                     else:
                         if debug_flag:
                             print("Not Valid Labeling")
                             print("-" * 20)
                         continue
-                elif original_c == R1 and first_c == R1 and c == W0:
+                elif original_c == Label.F_rho.R1 and first_c == Label.F_rho.R1 and c == Label.F_omega.W0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == R2 and first_c == W0 and c == R2:
+                elif original_c == Label.F_rho.R2 and first_c == Label.F_omega.W0 and c == Label.F_rho.R2:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == R2 and first_c == R2 and c == W0:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                else:
-                    if debug_flag:
-                        print("Not Valid Labeling")
-                        print("-" * 20)
-                    continue
-            elif in_sigma(original_c) and in_sigma(first_c) and in_sigma(c):
-                if original_c == SI and first_c == SI and c == SI:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S0 and first_c == S0 and c == S0:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S1 and first_c == S1 and c == S0:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S1 and first_c == S0 and c == S1:
-                    new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == S1 and first_c == S1 and c == S1:
+                elif original_c == Label.F_rho.R2 and first_c == Label.F_rho.R2 and c == Label.F_omega.W0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
                 else:
                     if debug_flag:
                         print("Not Valid Labeling")
                         print("-" * 20)
                     continue
-            elif in_omega(original_c) and in_omega(first_c) and in_omega(c):
-                if original_c == W0 and first_c == W0 and c == W0:
+            elif original_c.in_sigma and first_c.in_sigma and c.in_sigma:
+                if original_c == Label.F_sigma.SI and first_c == Label.F_sigma.SI and c == Label.F_sigma.SI:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == W1 and first_c == W0 and c == W1:
+                elif original_c == Label.F_sigma.S0 and first_c == Label.F_sigma.S0 and c == Label.F_sigma.S0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
-                elif original_c == W1 and first_c == W1 and c == W0:
+                elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S1 and c == Label.F_sigma.S0:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S0 and c == Label.F_sigma.S1:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S1 and c == Label.F_sigma.S1:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                else:
+                    if debug_flag:
+                        print("Not Valid Labeling")
+                        print("-" * 20)
+                    continue
+            elif original_c.in_omega and first_c.in_omega and c.in_omega:
+                if original_c == Label.F_omega.W0 and first_c == Label.F_omega.W0 and c == Label.F_omega.W0:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_omega.W1 and first_c == Label.F_omega.W0 and c == Label.F_omega.W1:
+                    new_theta = self.IncrementLabeling2(theta, i, c)
+                elif original_c == Label.F_omega.W1 and first_c == Label.F_omega.W1 and c == Label.F_omega.W0:
                     new_theta = self.IncrementLabeling2(theta, i, c)
                 else:
                     if debug_flag:
@@ -257,52 +250,52 @@ def EnumMHS_iterative(self, debug_flag=False) -> None:
                 original_c = theta[original_copy]
                 first_copy = self.Q[i][0] + self.nodes[self.first_appear[self.Q[i]]]["br"] + "0"
                 first_c = theta[first_copy]
-                if in_rho(original_c):
-                    if in_rho(c) and in_rho(first_c) and original_c - R0 == c - R0 + first_c - R0:
-                        if first_c == R1 and c == R1:
+                if original_c.in_rho:
+                    if c.in_rho and first_c.in_rho and original_c - Label.F_rho.R0 == c - Label.F_rho.R0 + first_c - Label.F_rho.R0:
+                        if first_c == Label.F_rho.R1 and c == Label.F_rho.R1:
                             new_theta = self.IncrementLabeling2(theta, i, c)
-                        elif first_c == R0 and c == R0:
+                        elif first_c == Label.F_rho.R0 and c == Label.F_rho.R0:
                             new_theta = self.IncrementLabeling2(theta, i, c)
-                        elif first_c == R0 and c == R1:
+                        elif first_c == Label.F_rho.R0 and c == Label.F_rho.R1:
                             new_theta = self.IncrementLabeling2(theta, i, c)
                         else:
                             if debug_flag:
                                 print("Not Valid Labeling")
                                 print("-" * 20)
                             continue
-                    elif original_c == R1 and first_c == R1 and c == W0:
+                    elif original_c == Label.F_rho.R1 and first_c == Label.F_rho.R1 and c == Label.F_omega.W0:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == R2 and first_c == W0 and c == R2:
+                    elif original_c == Label.F_rho.R2 and first_c == Label.F_omega.W0 and c == Label.F_rho.R2:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == R2 and first_c == R2 and c == W0:
-                        new_theta = self.IncrementLabeling2(theta, i, c)
-                    else:
-                        if debug_flag:
-                            print("Not Valid Labeling")
-                            print("-" * 20)
-                        continue
-                elif in_sigma(original_c) and in_sigma(first_c) and in_sigma(c):
-                    if original_c == SI and first_c == SI and c == SI:
-                        new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == S0 and first_c == S0 and c == S0:
-                        new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == S1 and first_c == S1 and c == S0:
-                        new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == S1 and first_c == S0 and c == S1:
-                        new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == S1 and first_c == S1 and c == S1:
+                    elif original_c == Label.F_rho.R2 and first_c == Label.F_rho.R2 and c == Label.F_omega.W0:
                         new_theta = self.IncrementLabeling2(theta, i, c)
                     else:
                         if debug_flag:
                             print("Not Valid Labeling")
                             print("-" * 20)
                         continue
-                elif in_omega(original_c) and in_omega(first_c) and in_omega(c):
-                    if original_c == W0 and first_c == W0 and c == W0:
+                elif original_c.in_sigma and first_c.in_sigma and c.in_sigma:
+                    if original_c == Label.F_sigma.SI and first_c == Label.F_sigma.SI and c == Label.F_sigma.SI:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == W1 and first_c == W0 and c == W1:
+                    elif original_c == Label.F_sigma.S0 and first_c == Label.F_sigma.S0 and c == Label.F_sigma.S0:
                         new_theta = self.IncrementLabeling2(theta, i, c)
-                    elif original_c == W1 and first_c == W1 and c == W0:
+                    elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S1 and c == Label.F_sigma.S0:
+                        new_theta = self.IncrementLabeling2(theta, i, c)
+                    elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S0 and c == Label.F_sigma.S1:
+                        new_theta = self.IncrementLabeling2(theta, i, c)
+                    elif original_c == Label.F_sigma.S1 and first_c == Label.F_sigma.S1 and c == Label.F_sigma.S1:
+                        new_theta = self.IncrementLabeling2(theta, i, c)
+                    else:
+                        if debug_flag:
+                            print("Not Valid Labeling")
+                            print("-" * 20)
+                        continue
+                elif original_c.in_omega and first_c.in_omega and c.in_omega:
+                    if original_c == Label.F_omega.W0 and first_c == Label.F_omega.W0 and c == Label.F_omega.W0:
+                        new_theta = self.IncrementLabeling2(theta, i, c)
+                    elif original_c == Label.F_omega.W1 and first_c == Label.F_omega.W0 and c == Label.F_omega.W1:
+                        new_theta = self.IncrementLabeling2(theta, i, c)
+                    elif original_c == Label.F_omega.W1 and first_c == Label.F_omega.W1 and c == Label.F_omega.W0:
                         new_theta = self.IncrementLabeling2(theta, i, c)
                     else:
                         if debug_flag:
@@ -348,7 +341,7 @@ def IncrementLabeling2(self, theta: Dict[str, int], i, c: int):
     return [new_theta]
 
 
-def IncrementLabeling(self, theta: Dict[str, int], i, c: int, V_label_S, V_label_W):
+def IncrementLabeling(self, theta: Dict[str, Label], i, c: Label, V_label_S, V_label_W):
     """
     Procedure IncrementLabeling receives as input a labeling which we assume to be extendable (see EnumMDS),
     and a label. It generates a new assignment and updates the labels of vertices based on the given label, so that
@@ -372,37 +365,37 @@ def IncrementLabeling(self, theta: Dict[str, int], i, c: int, V_label_S, V_label
 
     flag_of_two = False
 
-    if in_sigma(c):
+    if c.in_sigma:
         for v in K_i:
-            if in_rho(theta[v]):
-                new_theta[v] = max(R0, theta[v] - 1)
+            if theta[v].in_rho:
+                new_theta[v] = max(Label.F_rho.R0, theta[v] - 1)
 
-    if c == SI and (len(N_i) != 0 or len(W_i) != 0):
+    if c == Label.F_sigma.SI and (len(N_i) != 0 or len(W_i) != 0):
         return False
-    if S0 <= c <= S1:
-        if len([w for w in K_i if theta[w] in {SI, W0}]) != 0 or \
-                (c == S0 and len(W_i) == 0):
+    if Label.F_sigma.S0 <= c <= Label.F_sigma.S1:
+        if len([w for w in K_i if theta[w] in {Label.F_sigma.SI,Label.F_omega.W0}]) != 0 or \
+                (c == Label.F_sigma.S0 and len(W_i) == 0):
             return False
         else:
             for w in W_i:
-                if theta[w] == W1:
-                    new_theta[w] = W0
-    if in_omega(c):
-        if len([w for w in N_i if theta[w] == SI]) != 0 or \
+                if theta[w] == Label.F_omega.W1:
+                    new_theta[w] = Label.F_omega.W0
+    if c.in_omega:
+        if len([w for w in N_i if theta[w] == Label.F_sigma.SI]) != 0 or \
                 len(N_i) >= 2 or \
-                (len(N_i) == 0 and c == W0) or \
-                (len(N_i) != 0 and c == W1):
+                (len(N_i) == 0 and c == Label.F_omega.W0) or \
+                (len(N_i) != 0 and c == Label.F_omega.W1):
             return False
-        elif c == W0:
+        elif c == Label.F_omega.W0:
             v = N_i.pop()
-            if theta[v] == S0:
+            if theta[v] == Label.F_sigma.S0:
                 return False
             flag_of_two = v
-    if in_rho(c) and max(0, 2 - len(N_i)) != c - R0:
+    if c and max(0, 2 - len(N_i)) != c - Label.F_rho.R0:
         return False
     if flag_of_two:
-        new_theta[flag_of_two] = S0
+        new_theta[flag_of_two] = Label.F_sigma.S0
         new_theta2 = dict(new_theta)
-        new_theta2[flag_of_two] = S1
+        new_theta2[flag_of_two] = Label.F_sigma.S1
         return [new_theta, new_theta2]
     return [new_theta]
