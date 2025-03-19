@@ -1,6 +1,7 @@
 import networkx as nx
 from enum import IntEnum
 import plotly.graph_objects as go
+import plotly
 import EoN
 
 
@@ -17,6 +18,24 @@ class NodeType(IntEnum):
     BIG_JOIN_INTRODUCE = 5
     JOIN_FORGET = 6
     ROOT = 7
+
+    @property
+    def color(self) -> str:
+        """For visualisation purposes we assign a color to each node type."""
+        if self == NodeType.LEAF:
+           return 'green'
+        elif self == NodeType.ROOT:
+           return 'maroon'
+        elif self == NodeType.JOIN:
+            return 'dodgerblue'
+        elif self == NodeType.INTRODUCE:
+            return 'gold'
+        elif self == NodeType.FORGET:
+            return 'lightpink'
+        else:
+            return 'black'
+
+
 
 class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
     """
@@ -124,12 +143,23 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
         node_y = []
         node_text = []
         hover_text = []
+        node_color = []
         for node, (x, y) in pos.items():
             node_x.append(x)
             node_y.append(y)
             node_text.append(self.nodes[node]['bag'])
-            hover_text.append(f"ID: {node}<br>")
+            hover_str = ""
+            hover_str += f"ID: {node}<br>"
+            for key, value in self.nodes[node].items():
+                if key == "type":
+                    node_color.append(self.nodes[node]["type"].color)
+                    hover_str += f"{key}: {self.nodes[node]['type'].name}<br>"
+                else:
+                    hover_str += f"{key}: {value}<br>"
+            hover_text.append(hover_str)
 
+        if len(node_color) == 0:
+            node_color = "blue"
         # Create Plotly trace for nodes
         node_trace = go.Scatter(
             x=node_x, y=node_y,
@@ -138,7 +168,7 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
             text=node_text,
             hovertext=hover_text,
             textposition='bottom center',
-            marker=dict(showscale=False, symbol='circle-dot', size=20 )
+            marker=dict(showscale=False, symbol='circle-dot', size=20, color=node_color, )
         )
 
         # Create Plotly trace for edges
@@ -164,7 +194,7 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
                             margin=dict(b=0, l=0, r=0, t=0)
                         ))
         if save_path:
-            fig.to_html(save_path + ".html")
+            plotly.offline.plot(fig, filename=save_path + ".html")
         else:
             fig.show()
 
@@ -184,6 +214,7 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
         new_root = self.add_node_bag(set())
         self.add_edge(new_root, self.get_root())
         self.root = new_root
+        self.is_semi_nice = semi_nice
         if semi_nice:
             self.transform_to_semi_nice_rec(self.get_root())
         else:
@@ -198,7 +229,7 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
     def create_Q(self, current_node):
         if self.nodes[current_node]["type"] == NodeType.LEAF:
             return
-        if self.nodes[current_node]["type"] == FORGET:
+        if self.nodes[current_node]["type"] == NodeType.FORGET or self.nodes[current_node]["type"] == NodeType.JOIN_FORGET:
             v = self.nodes[list(self.successors(current_node))[0]]["bag"].difference(
                 self.nodes[current_node]["bag"]).pop()
             self.Q.append(v)
@@ -237,18 +268,18 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
             # Introduce node
             if len(diff1) > 1 or (len(diff1) == 1 and len(diff2) >= 1):
                 # creates a new Introduce node
-                new_node_bag = bag_of_node.diffrence({diff1.pop()})
+                new_node_bag = bag_of_node.difference({diff1.pop()})
                 new_node = self.add_node_bag(new_node_bag)
 
                 self.add_edge(current_node, new_node)
                 self.add_edge(new_node, child)
                 self.remove_edge(current_node, child)
 
-                self.nodes[current_node]["type"] = INTRODUCE
+                self.nodes[current_node]["type"] = NodeType.INTRODUCE
                 self.transform_to_nice_rec(new_node)
 
             elif len(diff1) == 1 and len(diff2) == 0:
-                self.nodes[current_node]["type"] = INTRODUCE
+                self.nodes[current_node]["type"] = NodeType.INTRODUCE
                 self.transform_to_nice_rec(child)
 
             # Forget node
@@ -261,11 +292,11 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                 self.add_edge(new_node, child)
                 self.remove_edge(current_node, child)
 
-                self.nodes[current_node]["type"] = FORGET
+                self.nodes[current_node]["type"] = NodeType.FORGET
                 self.transform_to_nice_rec(new_node)
 
             elif len(diff1) == 0 and len(diff2) == 1:
-                self.nodes[current_node]["type"] = FORGET
+                self.nodes[current_node]["type"] = NodeType.FORGET
                 self.transform_to_nice_rec(child)
 
             else:
@@ -299,7 +330,7 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                 self.transform_to_nice_rec(current_node)
             else:
                 # Join node
-                self.nodes[current_node]["type"] = JOIN
+                self.nodes[current_node]["type"] = NodeType.JOIN
                 child_1 = children[0]
 
                 new_node_1 = self.add_node_bag(self.nodes[current_node]["bag"])
@@ -355,11 +386,11 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                 self.add_edge(new_node, child)
                 self.remove_edge(current_node, child)
 
-                self.nodes[current_node]["type"] = INTRODUCE
+                self.nodes[current_node]["type"] = NodeType.INTRODUCE
                 self.transform_to_semi_nice_rec(new_node)
 
             elif len(diff1) == 1 and len(diff2) == 0:
-                self.nodes[current_node]["type"] = INTRODUCE
+                self.nodes[current_node]["type"] = NodeType.INTRODUCE
                 self.transform_to_semi_nice_rec(child)
 
             # Forget node
@@ -372,11 +403,11 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                 self.add_edge(new_node, child)
                 self.remove_edge(current_node, child)
 
-                self.nodes[current_node]["type"] = FORGET
+                self.nodes[current_node]["type"] = NodeType.FORGET
                 self.transform_to_semi_nice_rec(new_node)
 
             elif len(diff1) == 0 and len(diff2) == 1:
-                self.nodes[current_node]["type"] = FORGET
+                self.nodes[current_node]["type"] = NodeType.FORGET
                 self.transform_to_semi_nice_rec(child)
 
             else:
@@ -410,7 +441,7 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                 self.transform_to_semi_nice_rec(current_node)
             else:
                 # Join node
-                self.nodes[current_node]["type"] = JOIN
+                self.nodes[current_node]["type"] = NodeType.JOIN
                 if len(children) > 2:
                     # we want to make our tree binary
                     new_node = self.add_node_bag(self.nodes[current_node]["bag"])
@@ -422,35 +453,27 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                     self.transform_to_semi_nice_rec(current_node)
                 else:
                     for child in children:
-                        new_node = self.add_node_bag(self.nodes[current_node]["bag"])
-                        self.add_edge(current_node, new_node)
-                        self.add_edge(new_node, child)
-                        self.remove_edge(current_node, child)
-                        self.transform_to_semi_nice_rec(new_node)
+                        self.transform_to_semi_nice_rec(child)
 
-'''
 class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
     def __init__(self, G: nx.classes.graph, root: tuple = tuple(), semi_dntd = True, *args, **kwargs):
         super().__init__(G, root, semi_nice = semi_dntd, *args, **kwargs)
 
-
         self.first_appear = {vertex: None for vertex in self.original_graph.nodes}
         if semi_dntd:
             self.semi_ntd_to_semi_dntd(self.get_root(), debug_flag=False)
         else:
-            self.ntd_to_dntd(self.get_root())
+            self.ntd_to_dntd(self.get_root(), debug_flag=False)
         self.all_vertices = {v for node in self.nodes for v in self.nodes[node]["bag"]}
         self.local_neighbors(self.get_root())
-        self.create_factors()
         self.Q = []
         self.create_Q(self.get_root())
         self.first_appear_update(self.get_root())
         self.trans = {vertex: None for vertex in self.original_graph.nodes}
-        # self.draw_nice()
 
     def get_number_of_join_nodes(self):
-        return len([node for node in self.nodes if self.nodes[node]["type"] == JOIN])
+        return len([node for node in self.nodes if self.nodes[node]["type"] == NodeType.JOIN])
 
     def first_appear_update(self, current_node):
         if self.nodes[current_node]["type"] == NodeType.LEAF:
@@ -461,22 +484,9 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         for child in self.successors(current_node):
             self.first_appear_update(child)
 
-    def create_Q(self, current_node):
-        if self.nodes[current_node]["type"] == NodeType.LEAF:
-            return
-        if self.nodes[current_node]["type"] != NodeType.ROOT and self.nodes[list(self.predecessors(current_node))[0]][
-            "type"] == NodeType.ROOT:
-            self.Q.append(list(self.nodes[current_node]["bag"])[0])
-        if self.nodes[current_node]["type"] == FORGET or self.nodes[current_node]["type"] == JOIN_FORGET:
-            v = self.nodes[list(self.successors(current_node))[0]]["bag"].difference(
-                self.nodes[current_node]["bag"]).pop()
-            self.Q.append(v)
-
-        for child in self.successors(current_node):
-            self.create_Q(child)
-
     def local_neighbors(self, current_node):
-
+        # TODO: fix this function
+        # TODO: create tests for this function
         # This function is tentative and should be changed in appropriate way to the conjunctions of factors
         self.nodes[current_node]["local_neighbors"] = dict()
 
@@ -488,10 +498,9 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             for child in children:
                 self.local_neighbors(child)
 
-            if self.nodes[current_node]["type"] == INTRODUCE:
+            if self.nodes[current_node]["type"] == NodeType.INTRODUCE:
                 child_bag = self.nodes[children[0]]["bag"]
-                child_bag = {v[0] for v in child_bag}
-                v = self.nodes[current_node]["bag"].difference(self.nodes[children[0]]["bag"]).pop()
+                v = self.nodes[current_node]["bag"].difference(child_bag).pop()
                 for vertex in self.nodes[current_node]["bag"]:
                     if vertex == v:
                         self.nodes[current_node]["local_neighbors"][vertex] = \
@@ -502,8 +511,8 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                     else:
                         self.nodes[current_node]["local_neighbors"][vertex] = \
                             self.nodes[children[0]]["local_neighbors"][vertex]
-            elif self.nodes[current_node]["type"] == JOIN_INTRODUCE or self.nodes[current_node][
-                "type"] == BIG_JOIN_INTRODUCE:
+            elif self.nodes[current_node]["type"] == NodeType.JOIN_INTRODUCE or self.nodes[current_node][
+                "type"] == NodeType.BIG_JOIN_INTRODUCE:
                 v = self.nodes[current_node]["bag"].difference(self.nodes[children[0]]["bag"]).pop()
                 for vertex in self.nodes[current_node]["bag"]:
                     if vertex == v:
@@ -516,8 +525,8 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                     else:
                         self.nodes[current_node]["local_neighbors"][vertex] = \
                             self.nodes[children[0]]["local_neighbors"][vertex]
-            elif self.nodes[current_node]["type"] == FORGET or self.nodes[current_node]["type"] == NodeType.ROOT or \
-                    self.nodes[current_node]["type"] == JOIN_FORGET:
+            elif self.nodes[current_node]["type"] == NodeType.FORGET or self.nodes[current_node]["type"] == NodeType.ROOT or \
+                    self.nodes[current_node]["type"] == NodeType.JOIN_FORGET:
                 for vertex in self.nodes[current_node]["bag"]:
                     self.nodes[current_node]["local_neighbors"][vertex] = \
                         self.nodes[children[0]]["local_neighbors"][vertex]
@@ -550,7 +559,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             except IndexError:
                 print("father: None")
             print("children:" + str(list(self.successors(current_node))))
-            print("current type:" + self.nodes[current_node]["type"])
+            print("current type:" + self.nodes[current_node]["type"].name)
             print("-" * 30 + "\n")
 
         if self.nodes[current_node]["type"] == NodeType.LEAF:
@@ -559,10 +568,10 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         children = list(self.successors(current_node))
         if self.nodes[current_node]["type"] == NodeType.ROOT:
             self.nodes[current_node]["br"] = ""
-            return self.ntd_to_dntd(children[0])
+            return self.ntd_to_dntd(children[0], debug_flag=debug_flag)
 
         parent_node = next(iter(self.predecessors(current_node)))
-        if self.nodes[parent_node]["type"] == JOIN:
+        if self.nodes[parent_node]["type"] == NodeType.JOIN:
             if self.nodes[current_node]["leftCh"]:
                 self.nodes[current_node]["br"] = self.nodes[parent_node]["br"] + "0"
             else:
@@ -575,7 +584,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             if self.first_appear[vertex] is None:
                 self.first_appear[vertex] = current_node
 
-            new_bag += {chr(vertex) + self.nodes[current_node]["br"]}
+            new_bag.add(chr(vertex) + self.nodes[current_node]["br"])
 
         self.nodes[current_node]["bag"] = new_bag
         self.new_nodes_dict[current_node] = new_bag
@@ -583,21 +592,21 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         if debug_flag:
             print("updated current bag:" + str(self.nodes[current_node]["bag"]))
             print("-" * 30 + "\n")
-        if self.nodes[current_node]["type"] == JOIN:
+        if self.nodes[current_node]["type"] == NodeType.JOIN:
             self.nodes[children[0]]["leftCh"] = True
             self.nodes[children[1]]["leftCh"] = False
-            self.ntd_to_dntd(children[0])
-            self.ntd_to_dntd(children[1])
+            self.ntd_to_dntd(children[0], debug_flag=debug_flag)
+            self.ntd_to_dntd(children[1], debug_flag=debug_flag)
 
-            new_join_node_bag = self.nodes[children[0]]["bag"] + self.nodes[children[1]]["bag"]
+            new_join_node_bag = self.nodes[children[0]]["bag"].union(self.nodes[children[1]]["bag"])
             new_join_node = self.add_node_bag(new_join_node_bag)
             self.add_edge(current_node, new_join_node)
             self.remove_edge(current_node, children[0])
             self.remove_edge(current_node, children[1])
-            self.nodes[current_node]["type"] = FORGET
+            self.nodes[current_node]["type"] = NodeType.FORGET
             self.add_edge(new_join_node, children[0])
             self.add_edge(new_join_node, children[1])
-            self.nodes[new_join_node]["type"] = JOIN
+            self.nodes[new_join_node]["type"] = NodeType.JOIN
             self.nodes[new_join_node]["br"] = self.nodes[current_node]["br"]
 
             current_forget_node = current_node
@@ -606,24 +615,24 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                 new_forget_node = self.add_node_bag(new_forget_node_bag)
                 self.add_edge(current_forget_node, new_forget_node)
                 self.remove_edge(current_forget_node, new_join_node)
-                self.nodes[current_forget_node]["type"] = JOIN_FORGET
+                self.nodes[current_forget_node]["type"] = NodeType.JOIN_FORGET
                 self.add_edge(new_forget_node, new_join_node)
                 self.nodes[new_forget_node]["br"] = self.nodes[current_forget_node]["br"]
                 current_forget_node = new_forget_node
 
             current_introduce_node = current_forget_node
-            self.nodes[current_introduce_node]["type"] = BIG_JOIN_INTRODUCE
+            self.nodes[current_introduce_node]["type"] = NodeType.BIG_JOIN_INTRODUCE
             for vertex in list(self.nodes[current_node]["bag"])[1:]:
-                new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].diffrnce({vertex})
+                new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].difference({vertex})
                 new_introduce_node = self.add_node_bag(new_introduce_node_bag)
                 self.add_edge(current_introduce_node, new_introduce_node)
                 self.remove_edge(current_introduce_node, new_join_node)
                 self.add_edge(new_introduce_node, new_join_node)
                 self.nodes[new_introduce_node]["br"] = self.nodes[current_introduce_node]["br"]
                 current_introduce_node = new_introduce_node
-                self.nodes[current_introduce_node]["type"] = JOIN_INTRODUCE
+                self.nodes[current_introduce_node]["type"] = NodeType.JOIN_INTRODUCE
         else:
-            self.ntd_to_dntd(children[0])
+            self.ntd_to_dntd(children[0], debug_flag=debug_flag)
 
     def semi_ntd_to_semi_dntd(self, current_node, debug_flag=False):
         """
@@ -644,7 +653,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             except IndexError:
                 print("father: None")
             print("children:" + str(list(self.successors(current_node))))
-            print("current type:" + self.nodes[current_node]["type"])
+            print("current type:" + self.nodes[current_node]["type"].name)
             print("-" * 30 + "\n")
 
         if self.nodes[current_node]["type"] == NodeType.LEAF:
@@ -656,7 +665,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             return self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
 
         parent_node = next(iter(self.predecessors(current_node)))
-        if self.nodes[parent_node]["type"] == JOIN:
+        if self.nodes[parent_node]["type"] == NodeType.JOIN:
             if self.nodes[current_node]["leftCh"]:
                 self.nodes[current_node]["br"] = self.nodes[parent_node]["br"] + "0"
             else:
@@ -669,7 +678,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             if self.first_appear[vertex] is None:
                 self.first_appear[vertex] = current_node
 
-            new_bag = new_bag.union({chr(vertex) + self.nodes[current_node]["br"]})
+            new_bag.add(chr(vertex) + self.nodes[current_node]["br"])
 
         self.nodes[current_node]["bag"] = new_bag
         self.new_nodes_dict[current_node] = new_bag
@@ -677,7 +686,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         if debug_flag:
             print("updated current bag:" + str(self.nodes[current_node]["bag"]))
             print("-" * 30 + "\n")
-        if self.nodes[current_node]["type"] == JOIN:
+        if self.nodes[current_node]["type"] == NodeType.JOIN:
             self.nodes[children[0]]["leftCh"] = True
             self.nodes[children[1]]["leftCh"] = False
             self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
@@ -688,10 +697,10 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             self.add_edge(current_node, new_join_node)
             self.remove_edge(current_node, children[0])
             self.remove_edge(current_node, children[1])
-            self.nodes[current_node]["type"] = FORGET
+            self.nodes[current_node]["type"] = NodeType.FORGET
             self.add_edge(new_join_node, children[0])
             self.add_edge(new_join_node, children[1])
-            self.nodes[new_join_node]["type"] = JOIN
+            self.nodes[new_join_node]["type"] = NodeType.JOIN
             self.nodes[new_join_node]["br"] = self.nodes[current_node]["br"]
 
             current_forget_node = current_node
@@ -700,13 +709,13 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                 new_forget_node = self.add_node_bag(new_forget_node_bag)
                 self.add_edge(current_forget_node, new_forget_node)
                 self.remove_edge(current_forget_node, new_join_node)
-                self.nodes[current_forget_node]["type"] = JOIN_FORGET
+                self.nodes[current_forget_node]["type"] = NodeType.JOIN_FORGET
                 self.add_edge(new_forget_node, new_join_node)
                 self.nodes[new_forget_node]["br"] = self.nodes[current_forget_node]["br"]
                 current_forget_node = new_forget_node
 
             current_introduce_node = current_forget_node
-            self.nodes[current_introduce_node]["type"] = BIG_JOIN_INTRODUCE
+            self.nodes[current_introduce_node]["type"] = NodeType.BIG_JOIN_INTRODUCE
             for vertex in sorted(self.nodes[current_node]["bag"])[1:]:
                 new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].difference({vertex})
                 new_introduce_node = self.add_node_bag(new_introduce_node_bag)
@@ -715,10 +724,9 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                 self.add_edge(new_introduce_node, new_join_node)
                 self.nodes[new_introduce_node]["br"] = self.nodes[current_introduce_node]["br"]
                 current_introduce_node = new_introduce_node
-                self.nodes[current_introduce_node]["type"] = JOIN_INTRODUCE
+                self.nodes[current_introduce_node]["type"] = NodeType.JOIN_INTRODUCE
         else:
             self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
-'''
 
 if __name__ == '__main__':
 
@@ -732,9 +740,27 @@ if __name__ == '__main__':
                                 (x+3, x+4),
                                 (x+4, x+5),
                                 (x+4, x+6)])
-
-    td = RootedTreeDecomposition(paper_graph)
+    paper_graph2 = nx.Graph()
+    paper_graph2.add_nodes_from([i for i in range(80, x+9)])
+    paper_graph2.add_edges_from([(80, 81),
+                                 (80, 82),
+                                 (80, 85),
+                                 (80, 86),
+                                 (87, 85),
+                                 (85, 86),
+                                 (86, 88),
+                                 (81, 83),
+                                 (82, 83),
+                                 (83, 84)])
+    # import matplotlib.pyplot as plt
+    # nx.draw(paper_graph2, with_labels=True)
+    # plt.show()
+    td = RootedTreeDecomposition(paper_graph2)
     td.draw()
+    td = RootedDisjointBranchNiceTreeDecomposition(paper_graph2, semi_dntd=True)
+    td.draw("graph1")
+    td = RootedDisjointBranchNiceTreeDecomposition(paper_graph2, semi_dntd=False)
+    td.draw("graph")
     # rooted_dntd = RootedDisjointBranchNiceTreeDecomposition(paper_graph)
     # rooted_dntd.calculate_factors_for_mds_enum_iterative()
     # G1 = rooted_dntd.EnumMDS(dict(), debug_flag=False)
