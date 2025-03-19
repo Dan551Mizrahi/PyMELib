@@ -2,6 +2,7 @@ import networkx as nx
 from enum import IntEnum
 import plotly.graph_objects as go
 import plotly
+import matplotlib.pyplot as plt
 import EoN
 
 
@@ -32,6 +33,12 @@ class NodeType(IntEnum):
             return 'gold'
         elif self == NodeType.FORGET:
             return 'lightpink'
+        elif self == NodeType.JOIN_INTRODUCE:
+            return 'khaki'
+        elif self == NodeType.BIG_JOIN_INTRODUCE:
+            return 'white'
+        elif self == NodeType.JOIN_FORGET:
+            return 'pink'
         else:
             return 'black'
 
@@ -129,6 +136,16 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
         self.new_nodes_dict[new_node] = bag_of_node
 
         return new_node
+
+    def draw_original_graph_as_char(self):
+        """
+        Draws the original graph as a character graph.
+        """
+        G = self.original_graph
+        for node in G.nodes:
+            G.nodes[node]["label"] = chr(node)
+        nx.draw(G, with_labels=True, labels=nx.get_node_attributes(G, "label"))
+        plt.show()
 
     def draw(self, save_path: str = None) -> None:
         """
@@ -485,9 +502,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             self.first_appear_update(child)
 
     def local_neighbors(self, current_node):
-        # TODO: fix this function
         # TODO: create tests for this function
-        # This function is tentative and should be changed in appropriate way to the conjunctions of factors
         self.nodes[current_node]["local_neighbors"] = dict()
 
         if self.nodes[current_node]["type"] == NodeType.LEAF:
@@ -500,7 +515,8 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
             if self.nodes[current_node]["type"] == NodeType.INTRODUCE:
                 child_bag = self.nodes[children[0]]["bag"]
-                v = self.nodes[current_node]["bag"].difference(child_bag).pop()
+                child_bag = {v[0] for v in child_bag}
+                v = self.nodes[current_node]["bag"].difference(self.nodes[children[0]]["bag"]).pop()
                 for vertex in self.nodes[current_node]["bag"]:
                     if vertex == v:
                         self.nodes[current_node]["local_neighbors"][vertex] = \
@@ -532,13 +548,28 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                         self.nodes[children[0]]["local_neighbors"][vertex]
 
             else:  # Join node
-                for vertex in self.nodes[current_node]["bag"]:
-                    if vertex in self.nodes[children[0]]["bag"]:
-                        self.nodes[current_node]["local_neighbors"][vertex] = \
-                            self.nodes[children[0]]["local_neighbors"][vertex]
-                    else:
-                        self.nodes[current_node]["local_neighbors"][vertex] = \
-                            self.nodes[children[1]]["local_neighbors"][vertex]
+                    for vertex in self.nodes[current_node]["bag"]:
+                        # Check if the vertex appear in both children
+                        if self.is_semi_nice and len([1 for child in children
+                                                       if vertex[:-1]+"0" in self.nodes[child]["bag"] or
+                                                          vertex[:-1]+"1" in self.nodes[child]["bag"]]) < 2:
+                            if vertex in self.nodes[children[0]]["bag"]:
+                                self.nodes[current_node]["local_neighbors"][vertex] = \
+                                    self.nodes[children[0]]["local_neighbors"][vertex].union({
+                                        v[0] for v in self.nodes[children[1]]["bag"]
+                                    }.intersection({chr(n) for n in self.original_graph.neighbors(ord(vertex[0]))}))
+                            else:
+                                self.nodes[current_node]["local_neighbors"][vertex] = \
+                                    self.nodes[children[1]]["local_neighbors"][vertex].union({
+                                        v[0] for v in self.nodes[children[0]]["bag"]
+                                    }.intersection({chr(n) for n in self.original_graph.neighbors(ord(vertex[0]))}))
+                        else:
+                            if vertex in self.nodes[children[0]]["bag"]:
+                                self.nodes[current_node]["local_neighbors"][vertex] = \
+                                    self.nodes[children[0]]["local_neighbors"][vertex]
+                            else:
+                                self.nodes[current_node]["local_neighbors"][vertex] = \
+                                    self.nodes[children[1]]["local_neighbors"][vertex]
 
     def ntd_to_dntd(self, current_node, debug_flag=False):
         """
@@ -752,11 +783,8 @@ if __name__ == '__main__':
                                  (81, 83),
                                  (82, 83),
                                  (83, 84)])
-    # import matplotlib.pyplot as plt
-    # nx.draw(paper_graph2, with_labels=True)
-    # plt.show()
     td = RootedTreeDecomposition(paper_graph2)
-    td.draw()
+    td.draw_original_graph_as_char()
     td = RootedDisjointBranchNiceTreeDecomposition(paper_graph2, semi_dntd=True)
     td.draw("graph1")
     td = RootedDisjointBranchNiceTreeDecomposition(paper_graph2, semi_dntd=False)
