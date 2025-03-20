@@ -759,39 +759,3 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         else:
             self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
 
-if __name__ == '__main__':
-
-    paper_graph = nx.Graph()
-    x = 0
-    paper_graph.add_nodes_from([i for i in range(x, x+7)])
-    paper_graph.add_edges_from([(x, x+1),
-                                (x+1, x+2),
-                                (x+2, x+3),
-                                (x+3, x+1),
-                                (x+3, x+4),
-                                (x+4, x+5),
-                                (x+4, x+6)])
-    paper_graph2 = nx.Graph()
-    paper_graph2.add_nodes_from([i for i in range(80, x+9)])
-    paper_graph2.add_edges_from([(80, 81),
-                                 (80, 82),
-                                 (80, 85),
-                                 (80, 86),
-                                 (87, 85),
-                                 (85, 86),
-                                 (86, 88),
-                                 (81, 83),
-                                 (82, 83),
-                                 (83, 84)])
-    td = RootedTreeDecomposition(paper_graph2)
-    td.draw_original_graph_as_char()
-    td = RootedDisjointBranchNiceTreeDecomposition(paper_graph2, semi_dntd=True)
-    td.draw("graph1")
-    td = RootedDisjointBranchNiceTreeDecomposition(paper_graph2, semi_dntd=False)
-    td.draw("graph")
-    # rooted_dntd = RootedDisjointBranchNiceTreeDecomposition(paper_graph)
-    # rooted_dntd.calculate_factors_for_mds_enum_iterative()
-    # G1 = rooted_dntd.EnumMDS(dict(), debug_flag=False)
-    #
-    # for s in rooted_dntd.EnumMDS(dict(), debug_flag=False):
-    #     print("DS - ", s)

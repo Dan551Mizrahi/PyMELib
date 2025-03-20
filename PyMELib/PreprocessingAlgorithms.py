@@ -1,7 +1,7 @@
-from TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition, NodeType
-from Factors import MemoTable
+from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition, NodeType
+from PyMELib.Factors import MemoTable
 from frozendict import frozendict
-from labels import *
+from PyMELib.labels import *
 from PyMELib.utils.labels_utils import *
 from PyMELib.utils.comb_utils import generate_dictionaries_from_sets
 

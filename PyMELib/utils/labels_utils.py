@@ -1,6 +1,6 @@
 from PyMELib.labels import Label
 from typing import Tuple, Dict
-from comb_utils import reduce_dict_by_function
+from PyMELib.utils.comb_utils import reduce_dict_by_function
 
 def join_labels(l0: Label, l1: Label) -> Tuple[bool, Label]:
     """
