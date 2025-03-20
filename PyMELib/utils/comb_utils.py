@@ -20,15 +20,15 @@ def generate_dictionaries_from_sets(data: Dict[str, List]) -> List:
 
     return result
 
-def reduce_dict_by_function(data: Dict, function) -> set:
+def reduce_dict_by_function(data: Dict, property_function) -> set:
     """
     Reduce a dictionary by a function.
     :param data: A dictionary.
-    :param function: A function that takes a value and returns a boolean.
+    :param property_function: A property function that takes a value and returns a boolean.
     :return: A set of keys for which the function returned True regarding their values.
     """
     return_set = set()
     for key, value in data.items():
-        if function(value):
+        if property_function.__get__(value):
             return_set.add(key)
     return return_set

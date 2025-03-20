@@ -1,7 +1,6 @@
 from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition, NodeType
 from PyMELib.Factors import MemoTable
 from frozendict import frozendict
-from PyMELib.labels import *
 from PyMELib.utils.labels_utils import *
 from PyMELib.utils.comb_utils import generate_dictionaries_from_sets
 
@@ -30,9 +29,9 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
 
         # TODO: why not local neighbors?
         neighbors = {chr(n) for n in td.original_graph.neighbors(ord(vertex[0]))}
-        v_label = {w[0] for w, label in assignment.items() if label_lower <= label <= label_upper}
+        v_label_set = {w1[0] for w1, l1 in assignment.items() if label_lower <= l1 <= label_upper}
 
-        return len(neighbors.intersection(v_label))
+        return len(neighbors.intersection(v_label_set))
 
     def calculate_k(vertex: str, label_a: str, assignment: dict):
 
@@ -247,13 +246,13 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
                         flag = False
                         break
                 elif v_label == F_omega.W1:
-                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not (key[w].in_sigma):
+                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not key[w].in_sigma:
                         options_for_new_labels[w].add(key[w])
                     else:
                         flag = False
                         break
                 elif v_label == F_omega.W0:
-                    if (not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not (key[w].in_sigma)):
+                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not key[w].in_sigma:
                         options_for_new_labels[w].add(key[w])
                     elif F_sigma.S0 <= key[w] <= F_sigma.S1:
                         options_for_new_labels[w].add(F_sigma.S1)
@@ -323,9 +322,9 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
 
         # TODO: why not local neighbors?
         neighbors = {chr(n) for n in td.original_graph.neighbors(ord(vertex[0]))}
-        v_label = {w[0] for w, label in assignment.items() if label_lower <= label <= label_upper}
+        v_label_set = {w1[0] for w1, l1 in assignment.items() if label_lower <= l1 <= label_upper}
 
-        return len(neighbors.intersection(v_label))
+        return len(neighbors.intersection(v_label_set))
 
     def calculate_k(vertex: str, label_a: str, assignment: dict):
 

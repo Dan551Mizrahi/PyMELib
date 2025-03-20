@@ -1,4 +1,3 @@
-from PyMELib.labels import *
 from PyMELib.utils.labels_utils import *
 from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition
 from frozendict import frozendict
@@ -41,7 +40,7 @@ def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Labe
             print("Current vertex: " + str(td.Q[i]))
             print("Current node: " + str(td.nodes[td.first_appear[td.Q[i]]]["bag"]))
             print("Current br: " + str(td.nodes[td.first_appear[td.Q[i]]]["br"]))
-            print("Optional label: " + str(c))
+            print("Optional label: " + str(c.name))
         counter = 0
         for v in td.nodes[td.first_appear[td.Q[i]]]["bag"]:
             if v[0] == td.Q[i][0]:
@@ -140,16 +139,17 @@ def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Labe
     """
     if i == len(td.all_vertices):
         yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
+        yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
         return
     options_for_label = td.original_graph.nodes[ord(td.Q[i][0])]["options"]
     V_label_S, V_label_W = V_label_S_W(theta)
     for c in options_for_label:
         if debug_flag:
             print("Current theta: " + str(theta))
-            print("Current vertex: " + str(ord(td.Q[i][0])))
+            print("Current vertex: " + str(td.Q[i]))
             print("Current node: " + str(td.nodes[td.first_appear[td.Q[i]]]["bag"]))
             print("Current br: " + str(td.nodes[td.first_appear[td.Q[i]]]["br"]))
-            print("Optional label: " + str(c))
+            print("Optional label: " + str(c.name))
         counter = 0
         for v in td.nodes[td.first_appear[td.Q[i]]]["bag"]:
             if v[0] == td.Q[i][0]:
@@ -257,10 +257,10 @@ def EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
         for c in options_for_label:
             if debug_flag:
                 print("Current theta: " + str(theta))
-                print("Current vertex: " + str(ord(td.Q[i][0])))
+                print("Current vertex: " + str(td.Q[i]))
                 print("Current node: " + str(td.nodes[td.first_appear[td.Q[i]]]["bag"]))
                 print("Current br: " + str(td.nodes[td.first_appear[td.Q[i]]]["br"]))
-                print("Optional label: " + str(c))
+                print("Optional label: " + str(c.name))
             counter = 0
             for v in td.nodes[td.first_appear[td.Q[i]]]["bag"]:
                 if v[0] == td.Q[i][0]:
@@ -375,6 +375,8 @@ def IncrementLabeling(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict
     :param theta: Previous labeling.
     :param i: The index of the vertex in the graph (in Q).
     :param c: The label to be added to the vertex.
+    :param V_label_S: Set of vertices with label S (pre-calculated).
+    :param V_label_W: Set of vertices with label W (pre-calculated).
     :return:
     """
     new_theta = dict(theta)
@@ -394,7 +396,10 @@ def IncrementLabeling(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict
     if c.in_sigma:
         for v in K_i:
             if theta[v].in_rho:
-                new_theta[v] = max(F_rho.R0, theta[v] - 1)
+                for l in F_rho:
+                    if l == max(F_rho.R0.value, theta[v] - 1):
+                        new_theta[v] = l
+                        break
 
     if c == F_sigma.SI and (len(N_i) != 0 or len(W_i) != 0):
         return False
@@ -417,7 +422,7 @@ def IncrementLabeling(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict
             if theta[v] == F_sigma.S0:
                 return False
             flag_of_two = v
-    if c and max(0, 2 - len(N_i)) != c - F_rho.R0:
+    if c.in_rho and max(0, 2 - len(N_i)) != c - F_rho.R0:
         return False
     if flag_of_two:
         new_theta[flag_of_two] = F_sigma.S0

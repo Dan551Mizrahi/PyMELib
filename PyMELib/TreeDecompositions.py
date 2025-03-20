@@ -248,13 +248,14 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
     def create_Q(self, current_node):
         if self.nodes[current_node]["type"] == NodeType.LEAF:
             return
+        if self.nodes[current_node]["type"] != NodeType.ROOT and self.nodes[list(self.predecessors(current_node))[0]][
+            "type"] == NodeType.ROOT:
+            self.Q.append(list(self.nodes[current_node]["bag"])[0])
         if self.nodes[current_node]["type"] == NodeType.FORGET or self.nodes[current_node]["type"] == NodeType.JOIN_FORGET:
             v = self.nodes[list(self.successors(current_node))[0]]["bag"].difference(
                 self.nodes[current_node]["bag"]).pop()
             self.Q.append(v)
-        elif self.nodes[current_node]["type"] != NodeType.ROOT and self.nodes[list(self.predecessors(current_node))[0]][
-            "type"] == NodeType.ROOT:
-            self.Q.append(self.nodes[current_node]["bag"][0])
+
         for child in self.successors(current_node):
             self.create_Q(child)
 
@@ -643,7 +644,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             self.nodes[new_join_node]["br"] = self.nodes[current_node]["br"]
 
             current_forget_node = current_node
-            for vertex in new_join_node_bag:
+            for vertex in sorted(new_join_node_bag):
                 new_forget_node_bag = self.nodes[current_forget_node]["bag"].union({vertex})
                 new_forget_node = self.add_node_bag(new_forget_node_bag)
                 self.add_edge(current_forget_node, new_forget_node)
@@ -655,7 +656,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
             current_introduce_node = current_forget_node
             self.nodes[current_introduce_node]["type"] = NodeType.BIG_JOIN_INTRODUCE
-            for vertex in list(self.nodes[current_node]["bag"])[1:]:
+            for vertex in sorted(self.nodes[current_node]["bag"])[1:]:
                 new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].difference({vertex})
                 new_introduce_node = self.add_node_bag(new_introduce_node_bag)
                 self.add_edge(current_introduce_node, new_introduce_node)

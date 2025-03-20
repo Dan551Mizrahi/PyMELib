@@ -40,5 +40,5 @@ class MemoTable(Factor):
         return self._hash_table.keys()
 
     def __str__(self):
-        return_str = pformat([{k: v.name for k, v in key.items()} for key in self.get_only_true_keys()], width=250)
+        return_str = pformat([{k: v.name for k, v in key.items()} for key in self.get_only_true_keys()], width=400)
         return return_str.replace('\n', '<br>')
