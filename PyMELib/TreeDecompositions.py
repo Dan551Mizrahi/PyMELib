@@ -171,6 +171,8 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
                 if key == "type":
                     node_color.append(self.nodes[node]["type"].color)
                     hover_str += f"{key}: {self.nodes[node]['type'].name}<br>"
+                elif key == "processed":
+                    continue
                 else:
                     hover_str += f"{key}: {value}<br>"
             hover_text.append(hover_str)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+from pprint import pformat
 
 class Factor(ABC):
     """
@@ -19,7 +19,7 @@ class Factor(ABC):
 
 
 class MemoTable(Factor):
-    """Basic  dictionary-based implementation of a factor."""
+    """Basic dictionary-based implementation of a factor."""
     def __init__(self):
 
         # Memoization table
@@ -38,3 +38,7 @@ class MemoTable(Factor):
 
     def get_all_keys(self):
         return self._hash_table.keys()
+
+    def __str__(self):
+        return_str = pformat([{k: v.name for k, v in key.items()} for key in self.get_only_true_keys()], width=250)
+        return return_str.replace('\n', '<br>')

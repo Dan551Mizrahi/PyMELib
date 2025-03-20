@@ -37,11 +37,11 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
     def calculate_k(vertex: str, label_a: str, assignment: dict):
 
         if label_a == "S":
-            return calculate_k_range(vertex, Label.F_sigma.SI, Label.F_sigma.S1, assignment)
+            return calculate_k_range(vertex, F_sigma.SI, F_sigma.S1, assignment)
         elif label_a == "W":
-            return calculate_k_range(vertex, Label.F_omega.W0, Label.F_omega.W1, assignment)
+            return calculate_k_range(vertex, F_omega.W0, F_omega.W1, assignment)
         elif label_a == "R":
-            return calculate_k_range(vertex, Label.F_rho.R0, Label.F_rho.R2, assignment)
+            return calculate_k_range(vertex, F_rho.R0, F_rho.R2, assignment)
         else:
             return calculate_k_range(vertex, trans_dict[label_a], trans_dict[label_a], assignment)
 
@@ -129,17 +129,17 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
             if old_value == 0:
                 continue
             phi = dict(key)
-            for label in [Label.F_sigma.SI, Label.F_rho.R0, Label.F_omega.W0, Label.F_sigma.S0]:
+            for label in [F_sigma.SI, F_rho.R0, F_omega.W0, F_sigma.S0]:
                 if with_options and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
                     continue
                 phi[v] = label
-                if label == Label.F_sigma.SI:
+                if label == F_sigma.SI:
                     k_v_s = calculate_k(v, "S", key)
                     if k_v_s == 0:
                         td.nodes[current_node]["factor"].set_value(frozendict(phi), 1)
                     else:
                         td.nodes[current_node]["factor"].set_value(frozendict(phi), 0)
-                elif label == Label.F_sigma.S0:
+                elif label == F_sigma.S0:
                     k_v_si = calculate_k(v, "SI", key)
                     if k_v_si == 0:
                         td.nodes[current_node]["factor"].set_value(frozendict(phi), 1)
@@ -179,28 +179,28 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
             k_v_w1 = calculate_k(v, "W1", key)
             k_v_w0 = calculate_k(v, "W0", key)
 
-            if v_label == Label.F_sigma.SI:
+            if v_label == F_sigma.SI:
                 if not (k_v_s == 0 and k_v_w == 0):
                     td.nodes[child_node]["factor"].set_value(key, 0)
                     continue
             elif v_label.in_rho:
-                j = v_label - Label.F_rho.R0 # TODO: check id still holds
+                j = v_label - F_rho.R0 # TODO: check id still holds
                 if not (j + k_v_s >= 2):
                     td.nodes[child_node]["factor"].set_value(key, 0)
                     continue
-            elif v_label == Label.F_omega.W1:
+            elif v_label == F_omega.W1:
                 if not (k_v_s == 0):
                     td.nodes[child_node]["factor"].set_value(key, 0)
                     continue
-            elif v_label == Label.F_omega.W0:
+            elif v_label == F_omega.W0:
                 if not (k_v_si == 0 and k_v_s == 1):
                     td.nodes[child_node]["factor"].set_value(key, 0)
                     continue
-            elif v_label == Label.F_sigma.S1:
+            elif v_label == F_sigma.S1:
                 if not (k_v_si == 0 and k_v_w1 == 0):
                     td.nodes[child_node]["factor"].set_value(key, 0)
                     continue
-            elif v_label == Label.F_sigma.S0:
+            elif v_label == F_sigma.S0:
                 if not (k_v_si == 0 and k_v_w1 == 0 and k_v_w0 >= 1):
                     td.nodes[child_node]["factor"].set_value(key, 0)
                     continue
@@ -211,52 +211,52 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
             for w in key.keys():
                 if w == v:
                     continue
-                if v_label == Label.F_sigma.SI:
+                if v_label == F_sigma.SI:
                     if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))):
                         options_for_new_labels[w].add(key[w])
                     elif key[w].in_rho:
                         for j in range(3):
-                            if max(0, j - 1) == key[w] - Label.F_rho.R0:
+                            if max(0, j - 1) == key[w] - F_rho.R0:
                                 options_for_new_labels[w].add(trans_dict["R" + str(j)])
                                 # TODO: can't there be break here?
                     else:
                         flag = False
                         break
-                elif v_label == Label.F_sigma.S0:
-                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (Label.F_sigma.S0 <= key[w] <= Label.F_sigma.S1):
+                elif v_label == F_sigma.S0:
+                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (F_sigma.S0 <= key[w] <= F_sigma.S1):
                         options_for_new_labels[w].add(key[w])
                     elif key[w].in_rho:
                         for j in range(3):
-                            if max(0, j - 1) == key[w] - Label.F_rho.R0:
+                            if max(0, j - 1) == key[w] - F_rho.R0:
                                 options_for_new_labels[w].add(trans_dict["R" + str(j)])
-                    elif key[w] == Label.F_omega.W0:
-                        options_for_new_labels[w].add(Label.F_omega.W1)
+                    elif key[w] == F_omega.W0:
+                        options_for_new_labels[w].add(F_omega.W1)
                     else:
                         flag = False
                         break
-                elif v_label == Label.F_sigma.S1:
-                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (Label.F_sigma.S0 <= key[w] <= Label.F_sigma.S1):
+                elif v_label == F_sigma.S1:
+                    if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (F_sigma.S0 <= key[w] <= F_sigma.S1):
                         options_for_new_labels[w].add(key[w])
                     elif key[w].in_rho:
                         for j in range(3):
-                            if max(0, j - 1) == key[w] - Label.F_rho.R0:
+                            if max(0, j - 1) == key[w] - F_rho.R0:
                                 options_for_new_labels[w].add(trans_dict["R" + str(j)])
-                    elif key[w] == Label.F_omega.W0:
-                        options_for_new_labels[w].add(Label.F_omega.W1)
+                    elif key[w] == F_omega.W0:
+                        options_for_new_labels[w].add(F_omega.W1)
                     else:
                         flag = False
                         break
-                elif v_label == Label.F_omega.W1:
+                elif v_label == F_omega.W1:
                     if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not (key[w].in_sigma):
                         options_for_new_labels[w].add(key[w])
                     else:
                         flag = False
                         break
-                elif v_label == Label.F_omega.W0:
+                elif v_label == F_omega.W0:
                     if (not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not (key[w].in_sigma)):
                         options_for_new_labels[w].add(key[w])
-                    elif Label.F_sigma.S0 <= key[w] <= Label.F_sigma.S1:
-                        options_for_new_labels[w].add(Label.F_sigma.S1)
+                    elif F_sigma.S0 <= key[w] <= F_sigma.S1:
+                        options_for_new_labels[w].add(F_sigma.S1)
                     else:
                         flag = False
                         break
@@ -330,11 +330,11 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
     def calculate_k(vertex: str, label_a: str, assignment: dict):
 
         if label_a == "S":
-            return calculate_k_range(vertex, Label.F_sigma.SI, Label.F_sigma.S1, assignment)
+            return calculate_k_range(vertex, F_sigma.SI, F_sigma.S1, assignment)
         elif label_a == "W":
-            return calculate_k_range(vertex, Label.F_omega.W0, Label.F_omega.W1, assignment)
+            return calculate_k_range(vertex, F_omega.W0, F_omega.W1, assignment)
         elif label_a == "R":
-            return calculate_k_range(vertex, Label.F_rho.R0, Label.F_rho.R2, assignment)
+            return calculate_k_range(vertex, F_rho.R0, F_rho.R2, assignment)
         else:
             return calculate_k_range(vertex, trans_dict[label_a], trans_dict[label_a], assignment)
 
@@ -437,17 +437,17 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                 if old_value == 0:
                     continue
                 phi = dict(key)
-                for label in [Label.F_sigma.SI, Label.F_rho.R0, Label.F_omega.W0, Label.F_sigma.S0]:
+                for label in [F_sigma.SI, F_rho.R0, F_omega.W0, F_sigma.S0]:
                     if with_options and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
                         continue
                     phi[v] = label
-                    if label == Label.F_sigma.SI:
+                    if label == F_sigma.SI:
                         k_v_s = calculate_k(v, "S", key)
                         if k_v_s == 0:
                             td.nodes[current_node]["factor"].set_value(frozendict(phi), 1)
                         else:
                             td.nodes[current_node]["factor"].set_value(frozendict(phi), 0)
-                    elif label == Label.F_sigma.S0:
+                    elif label == F_sigma.S0:
                         k_v_si = calculate_k(v, "SI", key)
                         if k_v_si == 0:
                             td.nodes[current_node]["factor"].set_value(frozendict(phi), 1)
@@ -487,28 +487,28 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                 k_v_w1 = calculate_k(v, "W1", key)
                 k_v_w0 = calculate_k(v, "W0", key)
 
-                if v_label == Label.F_sigma.SI:
+                if v_label == F_sigma.SI:
                     if not (k_v_s == 0 and k_v_w == 0):
                         td.nodes[child_node]["factor"].set_value(key, 0)
                         continue
                 elif v_label.in_rho:
-                    j = v_label - Label.F_rho.R0
+                    j = v_label - F_rho.R0
                     if not (j + k_v_s >= 2):
                         td.nodes[child_node]["factor"].set_value(key, 0)
                         continue
-                elif v_label == Label.F_omega.W1:
+                elif v_label == F_omega.W1:
                     if not (k_v_s == 0):
                         td.nodes[child_node]["factor"].set_value(key, 0)
                         continue
-                elif v_label == Label.F_omega.W0:
+                elif v_label == F_omega.W0:
                     if not (k_v_si == 0 and k_v_s == 1):
                         td.nodes[child_node]["factor"].set_value(key, 0)
                         continue
-                elif v_label == Label.F_sigma.S1:
+                elif v_label == F_sigma.S1:
                     if not (k_v_si == 0 and k_v_w1 == 0):
                         td.nodes[child_node]["factor"].set_value(key, 0)
                         continue
-                elif v_label == Label.F_sigma.S0:
+                elif v_label == F_sigma.S0:
                     if not (k_v_si == 0 and k_v_w1 == 0 and k_v_w0 >= 1):
                         td.nodes[child_node]["factor"].set_value(key, 0)
                         continue
@@ -519,52 +519,52 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                 for w in key.keys():
                     if w == v:
                         continue
-                    if v_label == Label.F_sigma.SI:
+                    if v_label == F_sigma.SI:
                         if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))):
                             options_for_new_labels[w].add(key[w])
                         elif key[w].in_rho:
                             for j in range(3):
-                                if max(0, j - 1) == key[w] - Label.F_rho.R0:
+                                if max(0, j - 1) == key[w] - F_rho.R0:
                                     options_for_new_labels[w].add(trans_dict["R" + str(j)])
                                     # TODO: can't there be break here?
                         else:
                             flag = False
                             break
-                    elif v_label == Label.F_sigma.S0:
-                        if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (Label.F_sigma.S0 <= key[w] <= Label.F_sigma.S1):
+                    elif v_label == F_sigma.S0:
+                        if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (F_sigma.S0 <= key[w] <= F_sigma.S1):
                             options_for_new_labels[w].add(key[w])
                         elif key[w].in_rho:
                             for j in range(3):
-                                if max(0, j - 1) == key[w] - Label.F_rho.R0:
+                                if max(0, j - 1) == key[w] - F_rho.R0:
                                     options_for_new_labels[w].add(trans_dict["R" + str(j)])
-                        elif key[w] == Label.F_omega.W0:
-                            options_for_new_labels[w].add(Label.F_omega.W1)
+                        elif key[w] == F_omega.W0:
+                            options_for_new_labels[w].add(F_omega.W1)
                         else:
                             flag = False
                             break
-                    elif v_label == Label.F_sigma.S1:
-                        if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (Label.F_sigma.S0 <= key[w] <= Label.F_sigma.S1):
+                    elif v_label == F_sigma.S1:
+                        if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or (F_sigma.S0 <= key[w] <= F_sigma.S1):
                             options_for_new_labels[w].add(key[w])
                         elif key[w].in_rho:
                             for j in range(3):
-                                if max(0, j - 1) == key[w] - Label.F_rho.R0:
+                                if max(0, j - 1) == key[w] - F_rho.R0:
                                     options_for_new_labels[w].add(trans_dict["R" + str(j)])
-                        elif key[w] == Label.F_omega.W0:
-                            options_for_new_labels[w].add(Label.F_omega.W1)
+                        elif key[w] == F_omega.W0:
+                            options_for_new_labels[w].add(F_omega.W1)
                         else:
                             flag = False
                             break
-                    elif v_label == Label.F_omega.W1:
+                    elif v_label == F_omega.W1:
                         if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not key[w].in_sigma:
                             options_for_new_labels[w].add(key[w])
                         else:
                             flag = False
                             break
-                    elif v_label == Label.F_omega.W0:
+                    elif v_label == F_omega.W0:
                         if not (ord(w[0]) in td.original_graph.neighbors(ord(v[0]))) or not key[w].in_sigma:
                             options_for_new_labels[w].add(key[w])
-                        elif Label.F_sigma.S0 <= key[w] <= Label.F_sigma.S1:
-                            options_for_new_labels[w].add(Label.F_sigma.S1)
+                        elif F_sigma.S0 <= key[w] <= F_sigma.S1:
+                            options_for_new_labels[w].add(F_sigma.S1)
                         else:
                             flag = False
                             break

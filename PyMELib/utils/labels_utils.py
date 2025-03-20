@@ -1,4 +1,4 @@
-from PyMELib.labels import Label
+from PyMELib.labels import *
 from typing import Tuple, Dict
 from PyMELib.utils.comb_utils import reduce_dict_by_function
 
@@ -17,34 +17,34 @@ def join_labels(l0: Label, l1: Label) -> Tuple[bool, Label]:
     if l0.same_class(l1):
         if l0.in_sigma:
             if sum_of_labels == 0:
-                label_original_vertex = Label.F_sigma.SI
+                label_original_vertex = F_sigma.SI
             elif sum_of_labels == 1:
                 flag = False
             elif sum_of_labels == 2:
-                if (l0 == Label.F_sigma.SI and l1 == Label.F_sigma.S1) or (l0 == Label.F_sigma.S1 and l1 == Label.F_sigma.SI):
-                    label_original_vertex = Label.F_sigma.S1
+                if (l0 == F_sigma.SI and l1 == F_sigma.S1) or (l0 == F_sigma.S1 and l1 == F_sigma.SI):
+                    label_original_vertex = F_sigma.S1
                 else:
-                    label_original_vertex = Label.F_sigma.S0
+                    label_original_vertex = F_sigma.S0
             else:
-                label_original_vertex = Label.F_sigma.S1
+                label_original_vertex = F_sigma.S1
         elif l0.in_omega:
             if sum_of_labels > 7:
                 flag = False
             elif sum_of_labels == 7:
-                label_original_vertex = Label.F_omega.W1
+                label_original_vertex = F_omega.W1
             else:
-                label_original_vertex = Label.F_omega.W0
+                label_original_vertex = F_omega.W0
         elif l0.in_rho:
             if sum_of_labels == 10:
-                label_original_vertex = Label.F_rho.R0
+                label_original_vertex = F_rho.R0
             elif sum_of_labels == 11:
-                label_original_vertex = Label.F_rho.R1
+                label_original_vertex = F_rho.R1
             else:
-                label_original_vertex = Label.F_rho.R2
+                label_original_vertex = F_rho.R2
 
-    elif l0.in_rho and l1 == Label.F_omega.W0:
+    elif l0.in_rho and l1 == F_omega.W0:
         label_original_vertex = l0
-    elif l0 == Label.F_omega.W0  and l1.in_rho:
+    elif l0 == F_omega.W0  and l1.in_rho:
         label_original_vertex = l1
     else:
         flag = False

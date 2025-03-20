@@ -17,20 +17,6 @@ class Label(IntEnum):
     RHO_2 (R2): Vertices in V(G)\D with |N(v) ∩ D| ≥ 2 and |N(v) ∩ Vi ∩ D| ≥ 0.
     """
 
-    class F_sigma(IntEnum):
-        SI = 0
-        S0 = 1
-        S1 = 2
-
-    class F_omega(IntEnum):
-        W0 = 3
-        W1 = 4
-
-    class F_rho(IntEnum):
-        R0 = 5
-        R1 = 6
-        R2 = 7
-
     @property
     def in_sigma(self) -> bool:
         return self < 3
@@ -48,22 +34,36 @@ class Label(IntEnum):
                 (self.in_omega and other.in_omega) or
                 (self.in_rho and other.in_rho))
 
+class F_sigma(Label):
+    SI = 0
+    S0 = 1
+    S1 = 2
+
+class F_omega(Label):
+    W0 = 3
+    W1 = 4
+
+class F_rho(Label):
+    R0 = 5
+    R1 = 6
+    R2 = 7
+
 F = {
-    Label.F_sigma.SI,
-    Label.F_sigma.S0,
-    Label.F_sigma.S1,
-    Label.F_omega.W0,
-    Label.F_omega.W1,
-    Label.F_rho.R0,
-    Label.F_rho.R1,
-    Label.F_rho.R2
+    F_sigma.SI,
+    F_sigma.S0,
+    F_sigma.S1,
+    F_omega.W0,
+    F_omega.W1,
+    F_rho.R0,
+    F_rho.R1,
+    F_rho.R2
 }
 
-trans_dict = {"SI":Label.F_sigma.SI,
-              "S0":Label.F_sigma.S0,
-              "S1":Label.F_sigma.S1,
-              "W0":Label.F_omega.W0,
-              "W1":Label.F_omega.W1,
-              "R0":Label.F_rho.R0,
-              "R1":Label.F_rho.R1,
-              "R2":Label.F_rho.R2}
+trans_dict = {"SI":F_sigma.SI,
+              "S0":F_sigma.S0,
+              "S1":F_sigma.S1,
+              "W0":F_omega.W0,
+              "W1":F_omega.W1,
+              "R0":F_rho.R0,
+              "R1":F_rho.R1,
+              "R2":F_rho.R2}
