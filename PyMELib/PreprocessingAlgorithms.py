@@ -367,6 +367,11 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
             set_of_real_vertices = {v[0] + td.nodes[current_node]["br"] for v in td.nodes[current_node]["bag"]}
             dict_of_copies = {v: [] for v in set_of_real_vertices}
 
+            for v in td.nodes[current_node]["bag"]:
+                for v2 in set_of_real_vertices:
+                    if v2.startswith(v[0]):
+                        dict_of_copies[v2].append(v)
+            # TODO: fix this
             for v in set_of_real_vertices:
                 if (v + "0") in td.nodes[current_node]["bag"]:
                     dict_of_copies[v].append(v + "0")
@@ -388,8 +393,7 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                     if len(dict_of_copies[original_vertex]) == 1:
                         first_copy = dict_of_copies[original_vertex][0]
                         label = phi[first_copy]
-                        if original_vertex in phi.keys():  # TODO: why isn't it always in phi.keys()?
-                            phi[original_vertex] = label
+                        phi[original_vertex] = label
                         continue
 
                     first_copy = dict_of_copies[original_vertex][0]
@@ -599,16 +603,17 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                     new_key = {z: 0 for z in td.nodes[current_node]["bag"]}
                     for w in key_1.keys():
                         label1 = key_1[w]
-                        w2 = w[:-1] + str((int(w[-1]) + 1) % 2)
-                        if w2 in key_2.keys():
-                            label2 = key_2[w2]
-                            if ((label1.same_class(label2)) or (label1.in_omega and label2.in_rho) or
-                                    (label1.in_rho and label2.in_omega)):
-                                new_key[w] = label1
-                                new_key[w2] = label2
-                            else:
-                                flag = False
-                                break
+                        if not td.is_semi_nice and len(w[1:]) == len(td.nodes[current_node]["br"]) + 1:
+                            w2 = w[:-1] + str((int(w[-1]) + 1) % 2)
+                            if w2 in key_2.keys():
+                                label2 = key_2[w2]
+                                if ((label1.same_class(label2)) or (label1.in_omega and label2.in_rho) or
+                                        (label1.in_rho and label2.in_omega)):
+                                    new_key[w] = label1
+                                    new_key[w2] = label2
+                                else:
+                                    flag = False
+                                    break
                         else:
                             new_key[w] = label1
                     for w in key_2.keys():
@@ -619,6 +624,3 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
 
         # Mark the current node as processed
         td.nodes[current_node]["processed"] = True
-
-
-

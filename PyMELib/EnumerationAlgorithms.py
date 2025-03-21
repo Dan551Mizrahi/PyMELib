@@ -21,7 +21,7 @@ def IsExtendable(td: RootedDisjointBranchNiceTreeDecomposition, theta, i):
     else:
         return False
 
-def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label], i=0, debug_flag=False):
+def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False):
     """
     This algorithm means to enumerate all the minimal dominating sets of the graph.
     :param td: A rooted disjoint branch nice tree decomposition.
@@ -126,6 +126,116 @@ def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Labe
                 print("-" * 20)
             if IsExtendable(td, option, i):
                 yield from EnumMDS(td, option, i + 1, debug_flag=debug_flag)
+
+
+def EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=False):
+    """
+    This is a for loop version of EnumMDS, using a stack.
+    """
+    stack = [(dict(), 0)]
+
+    while stack:
+
+        theta, i = stack.pop()
+
+        if i == len(td.all_vertices):
+            yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
+            continue
+
+        V_label_S, V_label_W = V_label_S_W(theta)
+
+        for c in F:
+            if debug_flag:
+                print("Current theta: " + str(theta))
+                print("Current vertex: " + str(td.Q[i]))
+                print("Current node: " + str(td.nodes[td.first_appear[td.Q[i]]]["bag"]))
+                print("Current br: " + str(td.nodes[td.first_appear[td.Q[i]]]["br"]))
+                print("Optional label: " + str(c.name))
+            counter = 0
+            for v in td.nodes[td.first_appear[td.Q[i]]]["bag"]:
+                if v[0] == td.Q[i][0]:
+                    counter += 1
+            if counter == 1:
+                new_theta = IncrementLabeling(td, theta, i, c, V_label_S, V_label_W)
+            elif counter == 2:
+                new_theta = IncrementLabeling2(td, theta, i, c)
+            elif counter == 3:
+                original_copy = td.Q[i][0] + td.nodes[td.first_appear[td.Q[i]]]["br"]
+                original_c = theta[original_copy]
+                first_copy = td.Q[i][0] + td.nodes[td.first_appear[td.Q[i]]]["br"] + "0"
+                first_c = theta[first_copy]
+                if original_c.in_rho:
+                    if c.in_rho and first_c.in_rho and original_c - F_rho.R0 == c - F_rho.R0 + first_c - F_rho.R0:
+                        if first_c == F_rho.R1 and c == F_rho.R1:
+                            new_theta = IncrementLabeling2(td, theta, i, c)
+                        elif first_c == F_rho.R0 and c == F_rho.R0:
+                            new_theta = IncrementLabeling2(td, theta, i, c)
+                        elif first_c == F_rho.R0 and c == F_rho.R1:
+                            new_theta = IncrementLabeling2(td, theta, i, c)
+                        else:
+                            if debug_flag:
+                                print("Not Valid Labeling")
+                                print("-" * 20)
+                            continue
+                    elif original_c == F_rho.R1 and first_c == F_rho.R1 and c == F_omega.W0:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_rho.R2 and first_c == F_omega.W0 and c == F_rho.R2:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_rho.R2 and first_c == F_rho.R2 and c == F_omega.W0:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    else:
+                        if debug_flag:
+                            print("Not Valid Labeling")
+                            print("-" * 20)
+                        continue
+                elif original_c.in_sigma and first_c.in_sigma and c.in_sigma:
+                    if original_c == F_sigma.SI and first_c == F_sigma.SI and c == F_sigma.SI:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_sigma.S0 and first_c == F_sigma.S0 and c == F_sigma.S0:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_sigma.S1 and first_c == F_sigma.S1 and c == F_sigma.S0:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_sigma.S1 and first_c == F_sigma.S0 and c == F_sigma.S1:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_sigma.S1 and first_c == F_sigma.S1 and c == F_sigma.S1:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    else:
+                        if debug_flag:
+                            print("Not Valid Labeling")
+                            print("-" * 20)
+                        continue
+                elif original_c.in_omega and first_c.in_omega and c.in_omega:
+                    if original_c == F_omega.W0 and first_c == F_omega.W0 and c == F_omega.W0:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_omega.W1 and first_c == F_omega.W0 and c == F_omega.W1:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    elif original_c == F_omega.W1 and first_c == F_omega.W1 and c == F_omega.W0:
+                        new_theta = IncrementLabeling2(td, theta, i, c)
+                    else:
+                        if debug_flag:
+                            print("Not Valid Labeling")
+                            print("-" * 20)
+                        continue
+                else:
+                    if debug_flag:
+                        print("Not Valid Labeling")
+                        print("-" * 20)
+                    continue
+            else:
+                print("Error - First Appear isn't good")
+                return -1
+            if debug_flag:
+                print("IncrementLabeling: " + str(new_theta))
+                print("-" * 20)
+            if new_theta is None or not new_theta:
+                continue
+            for option in new_theta:
+                if debug_flag:
+                    print("Option: " + str(option))
+                    print("IsExtendable: " + str(IsExtendable(td, option, i)))
+                    print("-" * 20)
+                if IsExtendable(td, option, i):
+                    stack.append((option, i + 1))
 
 
 def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label], i=0, debug_flag=False):

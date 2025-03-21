@@ -50,7 +50,7 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
     The decomposition is based on the junction tree of the graph and allows for subsequent operations and analysis.
     """
 
-    def __init__(self, G: nx.classes.graph.Graph, root: tuple = tuple(), root_heuristic="leaf", first_label = 0, *args, **kwargs):
+    def __init__(self, G: nx.classes.graph.Graph, root: tuple = tuple(), root_heuristic="leaf", *args, **kwargs):
         """
         Initializes the RootedTreeDecomposition object.
 
@@ -477,14 +477,14 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
 
 class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
-    def __init__(self, G: nx.classes.graph, root: tuple = tuple(), semi_dntd = True, *args, **kwargs):
+    def __init__(self, G: nx.classes.graph, root: tuple = tuple(), semi_dntd = True, debug_flag = True, *args, **kwargs):
         super().__init__(G, root, semi_nice = semi_dntd, *args, **kwargs)
 
         self.first_appear = {vertex: None for vertex in self.original_graph.nodes}
         if semi_dntd:
-            self.semi_ntd_to_semi_dntd(self.get_root(), debug_flag=False)
+            self.semi_ntd_to_semi_dntd(self.get_root(), debug_flag=debug_flag)
         else:
-            self.ntd_to_dntd(self.get_root(), debug_flag=False)
+            self.ntd_to_dntd(self.get_root(), debug_flag=debug_flag)
         self.all_vertices = {v for node in self.nodes for v in self.nodes[node]["bag"]}
         self.local_neighbors(self.get_root())
         self.Q = []
@@ -668,12 +668,13 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         else:
             self.ntd_to_dntd(children[0], debug_flag=debug_flag)
 
-    def semi_ntd_to_semi_dntd(self, current_node, debug_flag=False):
+    def semi_ntd_to_semi_dntd(self, current_node, debug_flag=False, in_both_children=None):
         """
         Recursive function that transforms the tree disjoint branch nice form tree decomposition
         (after it is already nice form).
         :param current_node: The current node that we are on TD.
         :param debug_flag: If True, prints the current node and its information.
+        :param in_both_children: The vertices that appear in both children of the previous join node.
         :return: None
         """
 
@@ -696,7 +697,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         children = list(self.successors(current_node))
         if self.nodes[current_node]["type"] == NodeType.ROOT:
             self.nodes[current_node]["br"] = ""
-            return self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
+            return self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children)
 
         parent_node = next(iter(self.predecessors(current_node)))
         if self.nodes[parent_node]["type"] == NodeType.JOIN:
@@ -712,7 +713,10 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             if self.first_appear[vertex] is None:
                 self.first_appear[vertex] = current_node
 
-            new_bag.add(chr(vertex) + self.nodes[current_node]["br"])
+            if in_both_children and vertex in in_both_children:
+                new_bag.add(chr(vertex) + self.nodes[current_node]["br"])
+            else:
+                new_bag.add(chr(vertex))
 
         self.nodes[current_node]["bag"] = new_bag
         self.new_nodes_dict[current_node] = new_bag
@@ -723,8 +727,18 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         if self.nodes[current_node]["type"] == NodeType.JOIN:
             self.nodes[children[0]]["leftCh"] = True
             self.nodes[children[1]]["leftCh"] = False
-            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
-            self.semi_ntd_to_semi_dntd(children[1], debug_flag=debug_flag)
+            # Finding the vertices that appear in both children
+            in_both = set()
+            for v1 in self.nodes[children[0]]["bag"]:
+                if v1 in self.nodes[children[1]]["bag"]:
+                    in_both.add(v1)
+            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both)
+            self.semi_ntd_to_semi_dntd(children[1], debug_flag=debug_flag, in_both_children=in_both)
+
+            in_both_chr = set()
+            for v in in_both:
+                in_both_chr.add(chr(v) + self.nodes[current_node]["br"] + "0")
+                in_both_chr.add(chr(v) + self.nodes[current_node]["br"] + "1")
 
             new_join_node_bag = self.nodes[children[0]]["bag"] | self.nodes[children[1]]["bag"]
             new_join_node = self.add_node_bag(new_join_node_bag)
@@ -738,7 +752,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             self.nodes[new_join_node]["br"] = self.nodes[current_node]["br"]
 
             current_forget_node = current_node
-            for vertex in sorted(new_join_node_bag):
+            for vertex in sorted(new_join_node_bag.intersection(in_both_chr)):
                 new_forget_node_bag = self.nodes[current_forget_node]["bag"].union({vertex})
                 new_forget_node = self.add_node_bag(new_forget_node_bag)
                 self.add_edge(current_forget_node, new_forget_node)
@@ -750,7 +764,8 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
             current_introduce_node = current_forget_node
             self.nodes[current_introduce_node]["type"] = NodeType.BIG_JOIN_INTRODUCE
-            for vertex in sorted(self.nodes[current_node]["bag"])[1:]:
+            diff_join_big_intro = sorted(self.nodes[current_introduce_node]["bag"].difference(self.nodes[new_join_node]["bag"]))[1:]
+            for vertex in diff_join_big_intro:
                 new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].difference({vertex})
                 new_introduce_node = self.add_node_bag(new_introduce_node_bag)
                 self.add_edge(current_introduce_node, new_introduce_node)
@@ -760,5 +775,5 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                 current_introduce_node = new_introduce_node
                 self.nodes[current_introduce_node]["type"] = NodeType.JOIN_INTRODUCE
         else:
-            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag)
+            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children)
 
