@@ -471,7 +471,7 @@ def IncrementLabeling2(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dic
     """
     new_theta = dict(theta)
     new_theta[td.Q[i]] = c
-    if i == 0:
+    if i == 0: # TODO: why do we need this?
         return [new_theta]
     return [new_theta]
 
@@ -497,7 +497,17 @@ def IncrementLabeling(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict
 
     K_i = td.nodes[td.first_appear[current_vertex]]["local_neighbors"][current_vertex].intersection(
         {w[0] for w in td.Q[:i]})
-    K_i = {x + td.nodes[td.first_appear[current_vertex]]["br"] for x in K_i}
+    if td.is_semi_nice:
+        K_i_new = set()
+        len_of_br = len(td.nodes[td.first_appear[current_vertex]]["br"])
+        for x in K_i:
+            for y in td.nodes[td.first_appear[current_vertex]]["bag"]:
+                if y.startswith(x) and len(y) <= len_of_br + 1:
+                    K_i_new.add(y)
+                    break
+        K_i = K_i_new
+    else:
+        K_i = {x + td.nodes[td.first_appear[current_vertex]]["br"] for x in K_i}
     N_i = K_i.intersection(V_label_S)
     W_i = K_i.intersection(V_label_W)
 

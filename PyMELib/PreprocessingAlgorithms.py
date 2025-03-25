@@ -367,16 +367,18 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
             set_of_real_vertices = {v[0] + td.nodes[current_node]["br"] for v in td.nodes[current_node]["bag"]}
             dict_of_copies = {v: [] for v in set_of_real_vertices}
 
-            for v in td.nodes[current_node]["bag"]:
+            for v1 in td.nodes[current_node]["bag"]:
                 for v2 in set_of_real_vertices:
-                    if v2.startswith(v[0]):
-                        dict_of_copies[v2].append(v)
-            # TODO: fix this
-            for v in set_of_real_vertices:
-                if (v + "0") in td.nodes[current_node]["bag"]:
-                    dict_of_copies[v].append(v + "0")
-                if (v + "1") in td.nodes[current_node]["bag"]:
-                    dict_of_copies[v].append(v + "1")
+                    if v2 != v1 and v2.startswith(v1[0]):
+                        if td.is_semi_nice and len(v1) < len(v2):
+                            del dict_of_copies[v2]
+                            dict_of_copies[v1] = []
+                            dict_of_copies[v1].append(v1)
+                        else:
+                            dict_of_copies[v2].append(v1)
+
+            if td.is_semi_nice:
+                set_of_real_vertices = set(dict_of_copies.keys())
 
             # the new vertex that was introduced
             v = td.nodes[current_node]["bag"].difference(td.nodes[child_node]["bag"]).pop()
@@ -390,6 +392,8 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                 for original_vertex in set_of_real_vertices:
                     if flag is False:
                         break
+                    if len(dict_of_copies[original_vertex]) == 0:
+                        continue
                     if len(dict_of_copies[original_vertex]) == 1:
                         first_copy = dict_of_copies[original_vertex][0]
                         label = phi[first_copy]
