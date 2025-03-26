@@ -250,7 +250,7 @@ def EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
                     stack.append((option, i + 1))
 
 
-def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label], i=0, debug_flag=False):
+def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False):
     """
     This algorithm means to enumerate all the minimal hitting sets of a hypergraph (gets it reduction).
     :param td: A rooted disjoint branch nice tree decomposition.
@@ -391,7 +391,14 @@ def EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
             elif counter == 2:
                 new_theta = IncrementLabeling2(td, theta, i, c)
             elif counter == 3:
-                original_copy = td.Q[i][0] + td.nodes[td.first_appear[td.Q[i]]]["br"]
+                if td.is_semi_nice:
+                    original_copy = None
+                    begins_with = td.Q[i][0]
+                    for node in td.nodes[td.first_appear[td.Q[i]]]["bag"]:
+                        if node.startswith(begins_with) and (not original_copy or len(node) < len(original_copy)):
+                            original_copy = node
+                else:
+                    original_copy = td.Q[i][0] + td.nodes[td.first_appear[td.Q[i]]]["br"]
                 original_c = theta[original_copy]
                 first_copy = td.Q[i][0] + td.nodes[td.first_appear[td.Q[i]]]["br"] + "0"
                 first_c = theta[first_copy]

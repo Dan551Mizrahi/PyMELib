@@ -512,7 +512,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             self.first_appear_update(child)
 
     def local_neighbors(self, current_node):
-        # TODO: create tests for this function
+
         self.nodes[current_node]["local_neighbors"] = dict()
 
         if self.nodes[current_node]["type"] == NodeType.LEAF:
@@ -544,7 +544,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                     if vertex == v:
                         set_of_neighbors = set()
                         for v1 in self.nodes[current_node]["bag"]:
-                            if v1 != v and v1[:-1] == v:
+                            if v1 != v and v1.startswith(v):
                                 set_of_neighbors = set_of_neighbors.union(
                                     self.nodes[children[0]]["local_neighbors"][v1])
                         self.nodes[current_node]["local_neighbors"][vertex] = set_of_neighbors
@@ -675,7 +675,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         else:
             self.ntd_to_dntd(children[0], debug_flag=debug_flag)
 
-    def semi_ntd_to_semi_dntd(self, current_node, debug_flag=False, in_both_children=None):
+    def semi_ntd_to_semi_dntd(self, current_node, debug_flag=False, in_both_children=None, current_versions=None):
         """
         Recursive function that transforms the tree disjoint branch nice form tree decomposition
         (after it is already nice form).
@@ -704,7 +704,7 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
         children = list(self.successors(current_node))
         if self.nodes[current_node]["type"] == NodeType.ROOT:
             self.nodes[current_node]["br"] = ""
-            return self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children)
+            return self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children, current_versions=current_versions)
 
         parent_node = next(iter(self.predecessors(current_node)))
         if self.nodes[parent_node]["type"] == NodeType.JOIN:
@@ -722,6 +722,11 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
             if in_both_children and vertex in in_both_children:
                 new_bag.add(chr(vertex) + self.nodes[current_node]["br"])
+                if not current_versions:
+                    current_versions = dict()
+                current_versions[vertex] = chr(vertex) + self.nodes[current_node]["br"]
+            if current_versions and vertex in current_versions:
+                new_bag.add(current_versions[vertex])
             else:
                 new_bag.add(chr(vertex))
 
@@ -739,8 +744,8 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
             for v1 in self.nodes[children[0]]["bag"]:
                 if v1 in self.nodes[children[1]]["bag"]:
                     in_both.add(v1)
-            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both)
-            self.semi_ntd_to_semi_dntd(children[1], debug_flag=debug_flag, in_both_children=in_both)
+            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both, current_versions=current_versions)
+            self.semi_ntd_to_semi_dntd(children[1], debug_flag=debug_flag, in_both_children=in_both, current_versions=current_versions)
 
             in_both_chr = set()
             for v in in_both:
@@ -784,5 +789,5 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                     current_introduce_node = new_introduce_node
                     self.nodes[current_introduce_node]["type"] = NodeType.JOIN_INTRODUCE
         else:
-            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children)
+            self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children, current_versions=current_versions)
 

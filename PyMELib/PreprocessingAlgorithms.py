@@ -13,7 +13,7 @@ def create_factors(td: RootedDisjointBranchNiceTreeDecomposition) -> None:
     for node in td.nodes:
         td.nodes[node]["factor"] = MemoTable()
 
-def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition, current_node: int, with_options=False) -> None:
+def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition, current_node: int, options_for_labels=False) -> None:
     """
     This is a dynamic programming algorithm that calculates the factors of the TD.
     In order to implement the algorithm for enumeration of dominating sets.
@@ -21,7 +21,7 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
 
     :param td: The disjoint branch nice tree decomposition we are working on.
     :param current_node: The current node that we are on TD.
-    :param with_options: If True, we consider the options for labels of the vertices.
+    :param options_for_labels: If True, we consider the options for labels of the vertices.
     :return: None
     """
 
@@ -49,7 +49,7 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
 
     if type_of_node != NodeType.LEAF:
         for child in children:
-            calculate_factors_for_mds_enum(td, child, with_options=with_options)
+            calculate_factors_for_mds_enum(td, child, options_for_labels=options_for_labels)
         child_node = children[0]
 
     if type_of_node == NodeType.LEAF:
@@ -94,7 +94,7 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
                 if not flag:
                     continue
                 phi[original_vertex] = label_original_vertex
-            if with_options and not (phi[v] in td.original_graph.nodes[ord(v[0])]["options"]):
+            if options_for_labels and not (phi[v] in td.original_graph.nodes[ord(v[0])]["options"]):
                 flag = False
             if flag:
                 td.nodes[current_node]["factor"].set_value(frozendict(phi), 1)
@@ -109,7 +109,7 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
             if old_value == 0:
                 continue
             for label in F:
-                if with_options and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
+                if options_for_labels and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
                     continue
                 phi = dict(key)
                 phi[v] = label
@@ -129,7 +129,7 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
                 continue
             phi = dict(key)
             for label in [F_sigma.SI, F_rho.R0, F_omega.W0, F_sigma.S0]:
-                if with_options and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
+                if options_for_labels and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
                     continue
                 phi[v] = label
                 if label == F_sigma.SI:
@@ -313,7 +313,7 @@ def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition
         return
 
 
-def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDecomposition, with_options=False):
+def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDecomposition, options_for_labels=False):
     """
     This is a for loop version of calculate_factors_for_mds_enum, using a stack.
     """
@@ -367,7 +367,7 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
             set_of_real_vertices = {v[0] + td.nodes[current_node]["br"] for v in td.nodes[current_node]["bag"]}
             dict_of_copies = {v: [] for v in set_of_real_vertices}
 
-            for v1 in td.nodes[current_node]["bag"]:
+            for v1 in sorted(td.nodes[current_node]["bag"]):
                 for v2 in set_of_real_vertices:
                     if v2 != v1 and v2.startswith(v1[0]):
                         if td.is_semi_nice and len(v1) < len(v2):
@@ -375,7 +375,18 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                             dict_of_copies[v1] = []
                             dict_of_copies[v1].append(v1)
                         else:
-                            dict_of_copies[v2].append(v1)
+                            if v2 in dict_of_copies.keys():
+                                dict_of_copies[v2].append(v1)
+                            else:
+                                new_key = None
+                                for key in dict_of_copies.keys():
+                                    if key.startswith(v1[0]) and len(key) < len(v2):
+                                        new_key = key
+                                        break
+                                dict_of_copies[new_key].append(v1)
+            for key, list1 in dict_of_copies.items():
+                if len(list1) == 3:
+                    dict_of_copies[key].remove(key)
 
             if td.is_semi_nice:
                 set_of_real_vertices = set(dict_of_copies.keys())
@@ -389,15 +400,10 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                 phi[v] = "N"
                 flag = True
 
-                for original_vertex in set_of_real_vertices:
+                for original_vertex in dict_of_copies.keys():
                     if flag is False:
                         break
-                    if len(dict_of_copies[original_vertex]) == 0:
-                        continue
-                    if len(dict_of_copies[original_vertex]) == 1:
-                        first_copy = dict_of_copies[original_vertex][0]
-                        label = phi[first_copy]
-                        phi[original_vertex] = label
+                    if len(dict_of_copies[original_vertex]) == 0 or len(dict_of_copies[original_vertex]) == 1:
                         continue
 
                     first_copy = dict_of_copies[original_vertex][0]
@@ -410,7 +416,7 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                     if not flag:
                         continue
                     phi[original_vertex] = label_original_vertex
-                if with_options and not (phi[v] in td.original_graph.nodes[ord(v[0])]["options"]):
+                if options_for_labels and not (phi[v] in td.original_graph.nodes[ord(v[0])]["options"]):
                     flag = False
                 if flag:
                     td.nodes[current_node]["factor"].set_value(frozendict(phi), 1)
@@ -425,7 +431,7 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                 if old_value == 0:
                     continue
                 for label in F:
-                    if with_options and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
+                    if options_for_labels and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
                         continue
                     phi = dict(key)
                     phi[v] = label
@@ -445,7 +451,7 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
                     continue
                 phi = dict(key)
                 for label in [F_sigma.SI, F_rho.R0, F_omega.W0, F_sigma.S0]:
-                    if with_options and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
+                    if options_for_labels and not (label in td.original_graph.nodes[ord(v[0])]["options"]):
                         continue
                     phi[v] = label
                     if label == F_sigma.SI:
