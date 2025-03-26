@@ -10,9 +10,9 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     install_requires=['networkx', 'typing', 'frozendict', 'matplotlib', 'EoN', 'plotly'],
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
-    test_suite='tests',
+    extras_require={
+        'test': ['pytest',],
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

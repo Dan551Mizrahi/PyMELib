@@ -2,6 +2,8 @@ from PyMELib.utils.labels_utils import *
 from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition
 from frozendict import frozendict
 
+MAX_CHR = 1114111
+
 
 def IsExtendable(td: RootedDisjointBranchNiceTreeDecomposition, theta, i):
     """
@@ -21,20 +23,25 @@ def IsExtendable(td: RootedDisjointBranchNiceTreeDecomposition, theta, i):
     else:
         return False
 
-def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False):
+def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False, options_for_labels=False):
     """
     This algorithm means to enumerate all the minimal dominating sets of the graph.
     :param td: A rooted disjoint branch nice tree decomposition.
     :param theta: An extendable labeling.
     :param i: The index of the vertex in the graph (in Q).
     :param debug_flag: A flag to print debug information.
+    :param options_for_labels: A flag to use if the user added additional constraints to the labels of the vertices.
     :return:
     """
     if i == len(td.all_vertices):
         yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
         return
     V_label_S, V_label_W = V_label_S_W(theta)
-    for c in F:
+    if options_for_labels:
+        options_for_label = td.original_graph.nodes[ord(td.Q[i][0])]["options"]
+    else:
+        options_for_label = F
+    for c in options_for_label:
         if debug_flag:
             print("Current theta: " + str(theta))
             print("Current vertex: " + str(td.Q[i]))
@@ -125,10 +132,10 @@ def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Labe
                 print("IsExtendable: " + str(IsExtendable(td, option, i)))
                 print("-" * 20)
             if IsExtendable(td, option, i):
-                yield from EnumMDS(td, option, i + 1, debug_flag=debug_flag)
+                yield from EnumMDS(td, option, i + 1, debug_flag=debug_flag, options_for_labels=options_for_labels)
 
 
-def EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=False):
+def EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=False, options_for_labels=False):
     """
     This is a for loop version of EnumMDS, using a stack.
     """
@@ -144,7 +151,12 @@ def EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
 
         V_label_S, V_label_W = V_label_S_W(theta)
 
-        for c in F:
+        if options_for_labels:
+            options_for_label = td.original_graph.nodes[ord(td.Q[i][0])]["options"]
+        else:
+            options_for_label = F
+
+        for c in options_for_label:
             if debug_flag:
                 print("Current theta: " + str(theta))
                 print("Current vertex: " + str(td.Q[i]))
@@ -248,8 +260,7 @@ def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Labe
     :return:
     """
     if i == len(td.all_vertices):
-        yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
-        yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
+        yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta) if ord(x[0]) != MAX_CHR})
         return
     options_for_label = td.original_graph.nodes[ord(td.Q[i][0])]["options"]
     V_label_S, V_label_W = V_label_S_W(theta)
@@ -358,7 +369,7 @@ def EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
         theta, i = stack.pop()
 
         if i == len(td.all_vertices):
-            yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta)})
+            yield frozenset({td.original_graph.nodes[ord(x[0])]["original_name"] for x in V_label("S", theta) if ord(x[0]) != MAX_CHR})
             continue
 
         options_for_label = td.original_graph.nodes[ord(td.Q[i][0])]["options"]
