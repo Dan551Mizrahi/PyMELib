@@ -2,15 +2,21 @@ from PyMELib.PreprocessingAlgorithms import *
 from PyMELib.EnumerationAlgorithms import *
 from PyMELib.utils.readHypergraphFromFile import read_hypergraph
 from PyMELib.utils.addConstraints import add_constraints_on_graph
+import os
 
-example_HG1 = read_hypergraph("./exampleHG.dat")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+HG1_path = os.path.join(script_dir, "exampleHG.dat")
+HG2_path = os.path.join(script_dir, "exampleHG2.dat")
+
+example_HG1 = read_hypergraph(HG1_path)
 add_constraints_on_graph(example_HG1, include_in_ds=[5], exclude_from_ds=[6])
 example_MHS1 = {
                 frozenset({2, 5, 7}),
                 frozenset({1, 5, 7}),
                 }
 
-example_HG2 = read_hypergraph("./exampleHG2.dat")
+example_HG2 = read_hypergraph(HG2_path)
 add_constraints_on_graph(example_HG2, include_in_ds=[1], exclude_from_ds=[4])
 example_MHS2 = {
         frozenset({1, 3}),

@@ -1,8 +1,14 @@
 from PyMELib.PreprocessingAlgorithms import *
 from PyMELib.EnumerationAlgorithms import *
 from PyMELib.utils.readHypergraphFromFile import read_hypergraph
+import os
 
-example_HG1 = read_hypergraph("./exampleHG.dat")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+HG1_path = os.path.join(script_dir, "exampleHG.dat")
+HG2_path = os.path.join(script_dir, "exampleHG2.dat")
+
+example_HG1 = read_hypergraph(HG1_path)
 example_MHS1 = {
                 frozenset({2, 5, 7}),
                 frozenset({2, 4, 5, 6}),
@@ -14,7 +20,7 @@ example_MHS1 = {
                 frozenset({1, 3, 4, 6}),
                 }
 
-example_HG2 = read_hypergraph("./exampleHG2.dat")
+example_HG2 = read_hypergraph(HG2_path)
 example_MHS2 = {
         frozenset({2, 4}),
         frozenset({1, 3}),
