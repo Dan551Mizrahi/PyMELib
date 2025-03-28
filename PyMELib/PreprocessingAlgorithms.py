@@ -16,7 +16,7 @@ def create_factors(td: RootedDisjointBranchNiceTreeDecomposition) -> None:
 def calculate_factors_for_mds_enum(td: RootedDisjointBranchNiceTreeDecomposition, current_node: int, options_for_labels=False) -> None:
     """
     This is a dynamic programming algorithm that calculates the factors of the TD.
-    In order to implement the algorithm for enumeration of dominating sets.
+    In order to run the algorithm for enumeration of dominating sets.
     This what we call in our paper: preprocessing phase.
 
     :param td: The disjoint branch nice tree decomposition we are working on.
