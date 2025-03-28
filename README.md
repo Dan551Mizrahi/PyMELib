@@ -99,13 +99,14 @@ Using pip: <code>pip install PyMELib</code>
 from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition<br>
 from PyMELib.PreprocessingAlgorithms import create_factors, calculate_factors_for_mds_enum_iterative<br>
 from PyMELib.EnumerationAlgorithms import EnumMHS<br>
-from PyMELib.utils import read_hypergraph, add_constraints_on_graph
+from PyMELib.utils.readHypergraphFromFile import read_hypergraph
+from PyMELib.utils.addConstraints import add_constraints_on_graph
 </code>
 </pre>
 <p>Read your hypergraph:</p>
 <pre>
 <code class="language-python">
-H = read_hypergraph("path/to/your/hypergraph.hg") # TODO: Adjust path
+H = read_hypergraph("path/to/your/hypergraph.hg") # Replace with the actual path to your hypergraph file
 </code>
 </pre>
 <p>Add constraints:</p>
@@ -144,11 +145,12 @@ results = EnumMHS_iterative(td)
 from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition
 from PyMELib.PreprocessingAlgorithms import create_factors, calculate_factors_for_mds_enum_iterative
 from PyMELib.EnumerationAlgorithms import EnumMHS
-from PyMELib.utils import read_hypergraph, add_constraints_on_graph
+from PyMELib.utils.readHypergraphFromFile import read_hypergraph
+from PyMELib.utils.addConstraints import add_constraints_on_graph
 
 # 1. Load hypergraph
-# TODO: Adjust path
-H = readHypergraphFromFile("path/to/your/hypergraph.hg") 
+# Replace with the actual path to your hypergraph file
+H = read_hypergraph("path/to/your/hypergraph.hg") 
 
 # 2. create tree decomposition
 td = RootedDisjointBranchNiceTreeDecomposition(H, semi_dntd=True)
@@ -206,6 +208,6 @@ This code was created with the help of GitHub Copilot and Gemini.
 
 [1] Kenig, Batya, and Dan Shlomo Mizrahi. "Enumeration of Minimal Hitting Sets Parameterized by Treewidth." arXiv preprint arXiv:2408.15776 (2024).
 
-[2] Keisuke Murakami & Takeaki Uno (uno@nii.jp). Hypergraph Dualization Repository - Program Codes and Instances for Hypergraph Dualization (minimal hitting set enumeration). <a herf="https://research.nii.ac.jp/~uno/dualization.html">https://research.nii.ac.jp/~uno/dualization.html</a>.
+[2] Keisuke Murakami & Takeaki Uno (uno@nii.jp). Hypergraph Dualization Repository - Program Codes and Instances for Hypergraph Dualization (minimal hitting set enumeration). <a href="https://research.nii.ac.jp/~uno/dualization.html">https://research.nii.ac.jp/~uno/dualization.html</a>.
 
 [3] Miller et al., (2019). EoN (Epidemics on Networks): a fast, flexible Python package for simulation, analytic approximation, and analysis of epidemics on networks. Journal of Open Source Software, 4(44), 1731, https://doi.org/10.21105/joss.01731
