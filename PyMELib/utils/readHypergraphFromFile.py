@@ -14,7 +14,7 @@ def read_hypergraph(path_to_file: str) -> nx.Graph:
         hyperedges = []
         vertices = set()
         for line in lines:
-            hyperedges.append(tuple([int(x) for x in line.strip().split()]))
+            hyperedges.append(tuple([int(x) for x in line.replace(',', ' ').strip().split()]))
             vertices.update(hyperedges[-1])
 
         max_vertex = max(vertices)

@@ -147,10 +147,12 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
         nx.draw(G, with_labels=True, labels=nx.get_node_attributes(G, "label"))
         plt.show()
 
-    def draw(self, save_path: str = None) -> None:
+    def draw(self, save_path: str = None, as_char: bool=False, font_size: int = 14) -> None:
         """
         Draws the rooted tree decomposition using a hierarchical layout. This visualization includes the bags of the nodes.
         :param save_path: (Optional) The path to save the visualization as an HTML file (don't write the .html ending).
+        :param as_char: (Optional) If True, the graph will be drawn with characters vertices.
+        :param font_size: (Optional) The font size for the labels in the visualization.
         """
         pos = EoN.hierarchy_pos(self, root=self.root)
         nx.draw(self, pos, with_labels=True)
@@ -164,7 +166,10 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
         for node, (x, y) in pos.items():
             node_x.append(x)
             node_y.append(y)
-            node_text.append(self.nodes[node]['bag'])
+            if as_char:
+                node_text.append({chr(v) for v in self.nodes[node]["bag"]})
+            else:
+                node_text.append(self.nodes[node]['bag'])
             hover_str = ""
             hover_str += f"ID: {node}<br>"
             for key, value in self.nodes[node].items():
@@ -210,8 +215,13 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
                         layout=go.Layout(
                             showlegend=False,
                             hovermode='closest',
-                            margin=dict(b=0, l=0, r=0, t=0)
+                            font=dict(size=font_size, color="black"),
+                            margin=dict(b=0, l=0, r=0, t=0),
+                            paper_bgcolor='rgb(255,255,255)',
+                            plot_bgcolor='rgb(255,255,255)'
                         ))
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
         if save_path:
             plotly.offline.plot(fig, filename=save_path + ".html")
         else:

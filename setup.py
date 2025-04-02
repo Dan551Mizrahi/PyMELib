@@ -2,8 +2,8 @@ from setuptools import find_packages, setup
 
 setup(
     name='PyMELib',
-    packages=find_packages(include=['PyMELib']),
-    version='0.5.0',
+    packages=find_packages(include=['PyMELib', 'PyMELib.utils']),
+    version='0.5.7',
     description='First version of the PyMELib (Python Minimal Enumeration Library) library',
     author='Dan S. Mizrahi and Batya Kenig',
     author_email="danmizrahithemiz@gmail.com",
