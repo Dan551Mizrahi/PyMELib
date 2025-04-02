@@ -494,7 +494,7 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
 
 class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
-    def __init__(self, G: nx.classes.graph, root: tuple = tuple(), semi_dntd = True, debug_flag = True, *args, **kwargs):
+    def __init__(self, G: nx.classes.graph, root: tuple = tuple(), semi_dntd = True, debug_flag = False, *args, **kwargs):
         super().__init__(G, root, semi_nice = semi_dntd, *args, **kwargs)
 
         self.first_appear = {vertex: None for vertex in self.original_graph.nodes}
