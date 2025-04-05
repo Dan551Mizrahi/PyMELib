@@ -485,7 +485,12 @@ def calculate_factors_for_mds_enum_iterative(td: RootedDisjointBranchNiceTreeDec
 
         elif type_of_node == NodeType.FORGET or type_of_node == NodeType.ROOT:
 
+            # print("current node bag: ", {ord(xx[0]) for xx in td.nodes[current_node]["bag"]})
+            # print("child node bag: ", {ord(xx[0]) for xx in td.nodes[child_node]["bag"]})
+            # print("Type of child node: ", td.nodes[child_node]["type"].name)
+
             v = td.nodes[child_node]["bag"].difference(td.nodes[current_node]["bag"]).pop()
+            # print("v :", ord(v[0]))
 
             # All possible keys pass
             for key in td.nodes[child_node]["factor"].get_all_keys():

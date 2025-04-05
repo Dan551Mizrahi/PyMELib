@@ -472,9 +472,10 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
             else:
                 # Join node
                 self.nodes[current_node]["type"] = NodeType.JOIN
+                new_bag = self.nodes[children[0]]["bag"].union(self.nodes[children[1]]["bag"])
                 if len(children) > 2:
                     # we want to make our tree binary
-                    new_node = self.add_node_bag(self.nodes[current_node]["bag"])
+                    new_node = self.add_node_bag(new_bag)
                     self.add_edge(current_node, new_node)
                     self.add_edge(new_node, children[0])
                     self.remove_edge(current_node, children[0])
@@ -482,15 +483,12 @@ class RootedNiceTreeDecomposition(RootedTreeDecomposition):
                     self.remove_edge(current_node, children[1])
                     self.transform_to_semi_nice_rec(current_node)
                 else:
-                    new_bag = self.nodes[current_node]["bag"]
-                    for child in children:
-                        new_bag = new_bag.union(self.nodes[child]["bag"])
                     if new_bag != self.nodes[current_node]["bag"]:
                         self.nodes[current_node]["bag"] = new_bag
-                        self.transform_to_semi_nice_rec(next(self.predecessors(current_node)))
-                    else:
-                        for child in children:
-                            self.transform_to_semi_nice_rec(child)
+                        predecessor = next(self.predecessors(current_node))
+                        self.transform_to_semi_nice_rec(predecessor)
+                    for child in children:
+                        self.transform_to_semi_nice_rec(child)
 
 class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
@@ -756,7 +754,6 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                     in_both.add(v1)
             self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both, current_versions=current_versions)
             self.semi_ntd_to_semi_dntd(children[1], debug_flag=debug_flag, in_both_children=in_both, current_versions=current_versions)
-
             in_both_chr = set()
             for v in in_both:
                 in_both_chr.add(chr(v) + self.nodes[current_node]["br"] + "0")
@@ -764,7 +761,13 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
 
             new_join_node_bag = self.nodes[children[0]]["bag"] | self.nodes[children[1]]["bag"]
             if new_join_node_bag != self.nodes[current_node]["bag"]:
-
+                if len(new_join_node_bag) <= len(self.nodes[current_node]["bag"]):
+                    print("Error!")
+                    print("current bag:" + str(self.nodes[current_node]["bag"]))
+                    print("new join bag:" + str(new_join_node_bag))
+                    print("children 0 bag:" + str(self.nodes[children[0]]["bag"]))
+                    print("children 1 bag:" + str(self.nodes[children[1]]["bag"]))
+                    raise Exception("Error in semi_ntd_to_semi_dntd")
                 new_join_node = self.add_node_bag(new_join_node_bag)
                 self.add_edge(current_node, new_join_node)
                 self.remove_edge(current_node, children[0])
@@ -776,28 +779,30 @@ class RootedDisjointBranchNiceTreeDecomposition(RootedNiceTreeDecomposition):
                 self.nodes[new_join_node]["br"] = self.nodes[current_node]["br"]
 
                 current_forget_node = current_node
-                for vertex in sorted(new_join_node_bag.intersection(in_both_chr)):
-                    new_forget_node_bag = self.nodes[current_forget_node]["bag"].union({vertex})
-                    new_forget_node = self.add_node_bag(new_forget_node_bag)
-                    self.add_edge(current_forget_node, new_forget_node)
-                    self.remove_edge(current_forget_node, new_join_node)
-                    self.nodes[current_forget_node]["type"] = NodeType.JOIN_FORGET
-                    self.add_edge(new_forget_node, new_join_node)
-                    self.nodes[new_forget_node]["br"] = self.nodes[current_forget_node]["br"]
-                    current_forget_node = new_forget_node
+                to_forget_copies = sorted(new_join_node_bag.intersection(in_both_chr))
+                if len(to_forget_copies) > 0:
+                    for vertex in to_forget_copies:
+                        new_forget_node_bag = self.nodes[current_forget_node]["bag"].union({vertex})
+                        new_forget_node = self.add_node_bag(new_forget_node_bag)
+                        self.add_edge(current_forget_node, new_forget_node)
+                        self.remove_edge(current_forget_node, new_join_node)
+                        self.nodes[current_forget_node]["type"] = NodeType.JOIN_FORGET
+                        self.add_edge(new_forget_node, new_join_node)
+                        self.nodes[new_forget_node]["br"] = self.nodes[current_forget_node]["br"]
+                        current_forget_node = new_forget_node
 
-                current_introduce_node = current_forget_node
-                self.nodes[current_introduce_node]["type"] = NodeType.BIG_JOIN_INTRODUCE
-                diff_join_big_intro = sorted(self.nodes[current_introduce_node]["bag"].difference(self.nodes[new_join_node]["bag"]))[1:]
-                for vertex in diff_join_big_intro:
-                    new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].difference({vertex})
-                    new_introduce_node = self.add_node_bag(new_introduce_node_bag)
-                    self.add_edge(current_introduce_node, new_introduce_node)
-                    self.remove_edge(current_introduce_node, new_join_node)
-                    self.add_edge(new_introduce_node, new_join_node)
-                    self.nodes[new_introduce_node]["br"] = self.nodes[current_introduce_node]["br"]
-                    current_introduce_node = new_introduce_node
-                    self.nodes[current_introduce_node]["type"] = NodeType.JOIN_INTRODUCE
+                    current_introduce_node = current_forget_node
+                    self.nodes[current_introduce_node]["type"] = NodeType.BIG_JOIN_INTRODUCE
+                    diff_join_big_intro = sorted(self.nodes[current_introduce_node]["bag"].difference(self.nodes[new_join_node]["bag"]))[1:]
+                    for vertex in diff_join_big_intro:
+                        new_introduce_node_bag = self.nodes[current_introduce_node]["bag"].difference({vertex})
+                        new_introduce_node = self.add_node_bag(new_introduce_node_bag)
+                        self.add_edge(current_introduce_node, new_introduce_node)
+                        self.remove_edge(current_introduce_node, new_join_node)
+                        self.add_edge(new_introduce_node, new_join_node)
+                        self.nodes[new_introduce_node]["br"] = self.nodes[current_introduce_node]["br"]
+                        current_introduce_node = new_introduce_node
+                        self.nodes[current_introduce_node]["type"] = NodeType.JOIN_INTRODUCE
         else:
             self.semi_ntd_to_semi_dntd(children[0], debug_flag=debug_flag, in_both_children=in_both_children, current_versions=current_versions)
 

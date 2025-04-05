@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name='PyMELib',
     packages=find_packages(include=['PyMELib', 'PyMELib.utils']),
-    version='0.5.71',
+    version='0.6.0',
     description='First version of the PyMELib (Python Minimal Enumeration Library) library',
     author='Dan S. Mizrahi and Batya Kenig',
     author_email="danmizrahithemiz@gmail.com",
@@ -18,5 +18,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.9",
+    python_requires=">=3.8",
 )
