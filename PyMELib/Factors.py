@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pprint import pformat
+from PyMELib.labels2 import reverse_trans_dict
 
 class Factor(ABC):
     """
@@ -40,5 +41,5 @@ class MemoTable(Factor):
         return self._hash_table.keys()
 
     def __str__(self):
-        return_str = pformat([{k: v.name for k, v in key.items()} for key in self.get_only_true_keys()], width=100)
+        return_str = pformat([{k: reverse_trans_dict[v] for k, v in key.items()} for key in self.get_only_true_keys()], width=100)
         return return_str.replace('\n', '<br>')

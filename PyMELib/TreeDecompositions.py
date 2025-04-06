@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import plotly
 import matplotlib.pyplot as plt
 import EoN
+from networkx.algorithms.approximation import treewidth_min_fill_in, treewidth_min_degree
 
 
 # The code is based on the paper "Enumeration of minimal hitting sets parameterized by treewidth" by Batya Kenig and Dan Shlomo Mizrahi
@@ -50,7 +51,7 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
     The decomposition is based on the junction tree of the graph and allows for subsequent operations and analysis.
     """
 
-    def __init__(self, G: nx.classes.graph.Graph, root: tuple = tuple(), root_heuristic="leaf", *args, **kwargs):
+    def __init__(self, G: nx.classes.graph.Graph, root: tuple = tuple(), root_heuristic="leaf", td_heuristic="junction", *args, **kwargs):
         """
         Initializes the RootedTreeDecomposition object.
 
@@ -66,8 +67,12 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
         for node in self.original_graph.nodes:
             self.original_graph.nodes[node]["original_name"] = node
 
-        # TODO: junction tree heuristic handling
-        T = nx.junction_tree(self.original_graph)
+        if td_heuristic == "min_fill_in":
+            T = treewidth_min_fill_in(self.original_graph)[1]
+        elif td_heuristic == "min_degree":
+            T = treewidth_min_degree(self.original_graph)[1]
+        else:
+            T = nx.junction_tree(self.original_graph)
 
         root_flag = root == tuple()
 
