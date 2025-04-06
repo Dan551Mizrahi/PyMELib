@@ -1,4 +1,3 @@
-from PyMELib.utils.labels_utils import *
 from PyMELib.labels2 import *
 from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition
 from frozendict import frozendict
@@ -24,7 +23,7 @@ def IsExtendable(td: RootedDisjointBranchNiceTreeDecomposition, theta, i):
     else:
         return False
 
-def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False, options_for_labels=False):
+def EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, int] = dict(), i=0, debug_flag=False, options_for_labels=False):
     """
     This algorithm means to enumerate all the minimal dominating sets of the graph.
     :param td: A rooted disjoint branch nice tree decomposition.
@@ -258,7 +257,7 @@ def EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
                     stack.append((option, i + 1))
 
 
-def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False):
+def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, int] = dict(), i=0, debug_flag=False):
     """
     This algorithm means to enumerate all the minimal hitting sets of a hypergraph (gets it reduction).
     :param td: A rooted disjoint branch nice tree decomposition.
@@ -366,7 +365,7 @@ def EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Labe
                 yield from EnumMHS(td, option, i + 1, debug_flag=debug_flag)
 
 
-def EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=False):
+def EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, bound_cardinality=False, debug_flag=False):
     """
     This is a for loop version of EnumMHS, using a stack.
     """
@@ -382,7 +381,9 @@ def EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=
 
         options_for_label = td.original_graph.nodes[ord(td.Q[i][0])]["options"]
         V_label_S, V_label_W = V_label_S_W(theta)
-
+        if bound_cardinality:
+            if len({xx[0] for xx in V_label_S}) > bound_cardinality + 1:
+                continue
         for c in options_for_label:
             if debug_flag:
                 print("Current theta: " + str(theta))
@@ -497,12 +498,10 @@ def IncrementLabeling2(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dic
     """
     new_theta = dict(theta)
     new_theta[td.Q[i]] = c
-    if i == 0: # TODO: why do we need this?
-        return [new_theta]
     return [new_theta]
 
 
-def IncrementLabeling(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label], i, c: Label, V_label_S, V_label_W):
+def IncrementLabeling(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, int], i, c: int, V_label_S, V_label_W):
     """
     Procedure IncrementLabeling receives as input a labeling which we assume to be extendable (see EnumMDS),
     and a label. It generates a new assignment and updates the labels of vertices based on the given label, so that
