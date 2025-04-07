@@ -25,6 +25,7 @@
     <li><code>PreprocessingAlgorithms.py</code>: Contains preprocessing algorithms.</li>
     <li><code>Factors.py</code>: Contains classes used as factors.</li>
     <li><code>labels.py</code>: Handling Labels' definition and logic as defined in [1].</li>
+    <li><code>labels2.py</code>: Handling labels' definition and logic in more efficient manner, and is now used instead of <code>labels.py</code>.</li>
     </ul>
     </li>
     <li><code>tests/</code>: Contains unit tests for various components (e.g., <code>test_basicEnumDSAlgo.py</code>, <code>test_basicEnumHSAlgo.py</code>).</li>
@@ -40,7 +41,7 @@ The following list include the main functionalities of the library, more detaile
     Its <code>__init__</code> gets a <code>NetworkX</code> graph and construct a rooted tree decomposition of it using <code>NetworkX.junction_tree</code>.
     This class also includes a basic visualisation option of the tree decomposition, <code>self.draw</code>.</li>
     <li><code>RootedNiceTreeDecomposition</code>: Class that represents a nice tree decomposition (it inherits from <code>RootedNiceTreeDecomposition</code>). It has two modes for "niceness": 1. regular "niceness" - when <code>semi_nice=False</code> 
-    it transforms the regular rooted tree decomposition to a nice one using the function <code>self.transform_to_nice_rec</code>. 2. semi-nice "niceness" - when <code>semi_nice=True</code>  it transforms the regular rooted tree decomposition to another one using <code>self.transform_to_semi_nice_rec</code>, if the rooted tree decomposition can be
+    it transforms the regular rooted tree decomposition to a nice one using the function <code>self.transform_to_nice_rec</code>. 2. semi-nice "niceness" - when <code>semi_nice=True</code>  it transforms the regular rooted tree decomposition to another one using <code>self.transform_to_semi_nice_rec</code> [4], if the rooted tree decomposition can be
     transformed into a disjoint branch one, it will transform it, if not, the function will transform it to the closest tree to a disjoint one, i.e. the tree won;t have the same vertex in both branches if it doesn't have to be there. Additionally, this class also provide a complete order of the vertices <code>Q</code> as described in [1].</li>
     <li><code>NodeType</code>: This <code>IntEnum</code> represents the types of nodes (bags) in nice tree decomposition, i.e. Forget, Join, ...</li>
     <li><code>RootedDisjointBranchNiceTreeDecomposition</code>: This new data structure introduced in [1] is implemented using this class. Like before it includes a regular option using <code>semi_dntd = False</code> and a "semi" one using <code>semi_dntd = True</code>.</li>
@@ -59,7 +60,7 @@ The following list include the main functionalities of the library, more detaile
     <li><code>EnumMDS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False, options_for_labels=False)</code>: The algorithm for minimal dominating sets enumeration described in [1]. Theoretically the time delay is bounded by $O(nw)$, $n$ being the number of nodes in the graph and $w$ is the graph's treewidth.</li>
     <li><code>EnumMDS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=False, options_for_labels=False)</code>: This is a for loop version of <code>EnumMDS</code>, using a stack.</li>
     <li><code>EnumMHS(td: RootedDisjointBranchNiceTreeDecomposition, theta: Dict[str, Label] = dict(), i=0, debug_flag=False)</code>: This is a version of <code>EnumMDS</code> designated for minimal hitting set enumeration.</li>
-    <li><code>EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, debug_flag=False)</code>: This is a for loop version of <code>EnumMHS</code>, using a stack.</li>
+    <li><code>EnumMHS_iterative(td: RootedDisjointBranchNiceTreeDecomposition, bound_cardinality=False, debug_flag=False)</code>: This is a for loop version of <code>EnumMHS</code>, using a stack. It also offers a bounded cardinality enumeration option, to use this option simply type the size you want to bound your minimal hitting sets with.</li>
     </ol></li>
     <li><b>Input:</b> Utilities for reading hypergraph data in the input format of the dualization repository [2], constructing the proper reduction to enumeration of minimal dominating sets described in [1] and adding other inclusion/exclusion constraints on the problem. You can look at <code>utils/readHypergraphFromFile.py</code> and <code>utils/addConstraints.py</code> which include:
     <ol>
@@ -96,9 +97,9 @@ Using pip: <code>pip install PyMELib</code>
 <p>Import the library contents:</p>
 <pre>
 <code class="language-python">
-from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition<br>
-from PyMELib.PreprocessingAlgorithms import create_factors, calculate_factors_for_mds_enum_iterative<br>
-from PyMELib.EnumerationAlgorithms import EnumMHS<br>
+from PyMELib.TreeDecompositions import RootedDisjointBranchNiceTreeDecomposition
+from PyMELib.PreprocessingAlgorithms import create_factors, calculate_factors_for_mds_enum_iterative
+from PyMELib.EnumerationAlgorithms import EnumMHS
 from PyMELib.utils.readHypergraphFromFile import read_hypergraph
 from PyMELib.utils.addConstraints import add_constraints_on_graph
 </code>
@@ -189,6 +190,12 @@ frozenset({1, 4})
 </code>
 </pre>
 
+<h3>For Developers</h3>
+<p>To run the tests, you can use the following command:</p>
+<pre>
+pytest tests
+</pre>
+
 <h2>Limitations</h2>
 
 <ul>
@@ -211,3 +218,5 @@ This code was created with the help of GitHub Copilot and Gemini.
 [2] Keisuke Murakami & Takeaki Uno (uno@nii.jp). Hypergraph Dualization Repository - Program Codes and Instances for Hypergraph Dualization (minimal hitting set enumeration). <a href="https://research.nii.ac.jp/~uno/dualization.html">https://research.nii.ac.jp/~uno/dualization.html</a>.
 
 [3] Miller et al., (2019). EoN (Epidemics on Networks): a fast, flexible Python package for simulation, analytic approximation, and analysis of epidemics on networks. Journal of Open Source Software, 4(44), 1731, https://doi.org/10.21105/joss.01731
+
+[4] Dorn, Frederic, and Jan Arne Telle. "Semi-nice tree-decompositions: The best of branchwidth, treewidth and pathwidth with one algorithm." Discrete Applied Mathematics 157.12 (2009): 2737-2746.
