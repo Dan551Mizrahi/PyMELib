@@ -82,7 +82,7 @@ class RootedTreeDecomposition(nx.classes.digraph.DiGraph):
         # Root the junction tree (initially)
         self.bfs_tree = nx.bfs_tree(T, root)
 
-        if root_heuristic == "leaf" and not root_flag:
+        if root_heuristic == "leaf" and root_flag:
             leaves = [node for node in T.nodes if T.degree(node) == 1]
             if len(leaves) != 0:
                 root = leaves[0]
